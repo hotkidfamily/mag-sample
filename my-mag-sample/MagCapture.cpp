@@ -23,23 +23,26 @@ bool MagCapture::loadMagnificationAPI()
 
     _hMagModule = LoadLibraryW(L"magnification.dll");
 
-    memset(&_apiList, 0, sizeof(_apiList));
 
-    _apiList.Initialize = reinterpret_cast<fnMagInitialize>(
-        GetProcAddress(_hMagModule, "MagInitialize"));
-    _apiList.Uninitialize = reinterpret_cast<fnMagUninitialize>(
-        GetProcAddress(_hMagModule, "MagUninitialize"));
-    _apiList.SetWindowFilterList = reinterpret_cast<fnMagSetWindowFilterList>(
-        GetProcAddress(_hMagModule, "MagSetWindowFilterList"));
-    _apiList.GetWindowFilterList = reinterpret_cast<fnMagGetWindowFilterList>(
-        GetProcAddress(_hMagModule, "MagGetWindowFilterList"));
-    _apiList.SetWindowSource = reinterpret_cast<fnMagSetWindowSource>(
-        GetProcAddress(_hMagModule, "MagSetWindowSource"));
-    _apiList.GetWindowSource = reinterpret_cast<fnMagGetWindowSource>(
-        GetProcAddress(_hMagModule, "MagGetWindowSource"));
-    _apiList.SetImageScalingCallback = reinterpret_cast<fnMagSetImageScalingCallback>(
-        GetProcAddress(_hMagModule, "MagSetImageScalingCallback"));
+    if (_hMagModule) {
 
+        memset(&_apiList, 0, sizeof(_apiList));
+
+        _apiList.Initialize = reinterpret_cast<fnMagInitialize>(
+            GetProcAddress(_hMagModule, "MagInitialize"));
+        _apiList.Uninitialize = reinterpret_cast<fnMagUninitialize>(
+            GetProcAddress(_hMagModule, "MagUninitialize"));
+        _apiList.SetWindowFilterList = reinterpret_cast<fnMagSetWindowFilterList>(
+            GetProcAddress(_hMagModule, "MagSetWindowFilterList"));
+        _apiList.GetWindowFilterList = reinterpret_cast<fnMagGetWindowFilterList>(
+            GetProcAddress(_hMagModule, "MagGetWindowFilterList"));
+        _apiList.SetWindowSource = reinterpret_cast<fnMagSetWindowSource>(
+            GetProcAddress(_hMagModule, "MagSetWindowSource"));
+        _apiList.GetWindowSource = reinterpret_cast<fnMagGetWindowSource>(
+            GetProcAddress(_hMagModule, "MagGetWindowSource"));
+        _apiList.SetImageScalingCallback = reinterpret_cast<fnMagSetImageScalingCallback>(
+            GetProcAddress(_hMagModule, "MagSetImageScalingCallback"));
+    }
 
     ret = !(!_hMagModule
         || !_apiList.Initialize
@@ -126,7 +129,7 @@ bool MagCapture::initMagnifier() {
         return false;
     }
 
-    SetWindowLongPtr(_magWnd, 0, (LONG_PTR)this);
+    //SetWindowLongPtr(_magWnd, 0, (LONG_PTR)this);
 
 #if 0
     if (excluded_window_) {
