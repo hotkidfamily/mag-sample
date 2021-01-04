@@ -10,6 +10,8 @@
 #include "my-mag-sampleDlg.h"
 #include "afxdialogex.h"
 
+#include <stdexcept>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
