@@ -224,7 +224,7 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
     DesktopRect rect = DesktopRect::MakeXYWH(0, 0, 1280, 720);
 
     if (capture.capture.get())
-        capture.capture->CaptureImage(rect);
+        capture.capture->captureImage(rect);
 
     //CDialogEx::OnTimer(nIDEvent);
 }

@@ -185,12 +185,12 @@ BOOL WINAPI MagCapture::OnMagImageScalingCallback(HWND hwnd,
     MagCapture *owner = reinterpret_cast<MagCapture *>(TlsGetValue(GetTlsIndex()));
     
     if (owner)
-        owner->OnCaptured(srcdata, srcheader);
+        owner->onCaptured(srcdata, srcheader);
 
     return TRUE;
 }
 
-bool MagCapture::OnCaptured(void *srcdata, MAGIMAGEHEADER header)
+bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
 {
     _bCapSuccess = true;
 
@@ -226,7 +226,7 @@ bool MagCapture::setCallback(funcCaptureCallback fcb, void* args)
 }
 
 
-bool MagCapture::CaptureImage(const DesktopRect& rect) 
+bool MagCapture::captureImage(const DesktopRect& rect) 
 {
     // Set the magnifier control to cover the captured rect. The content of the
     // magnifier control will be the captured image.

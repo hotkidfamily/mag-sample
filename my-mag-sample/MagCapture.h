@@ -22,8 +22,8 @@ public:
     bool startCaptureWindow(HWND hWnd);
     bool startCaptureScreen(HMONITOR hMonitor);
     bool stop();
-    bool OnCaptured(void* srcdata, MAGIMAGEHEADER srcheader);
-    bool CaptureImage(const DesktopRect& rect);
+    bool onCaptured(void* srcdata, MAGIMAGEHEADER srcheader);
+    bool captureImage(const DesktopRect& rect);
     bool setCallback(funcCaptureCallback, void*);
 
     static BOOL WINAPI OnMagImageScalingCallback(HWND hwnd,
