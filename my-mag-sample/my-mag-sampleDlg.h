@@ -39,9 +39,15 @@ protected:
     afx_msg void OnBnClickedBtnScreencap();
 	DECLARE_MESSAGE_MAP()
 
+    afx_msg LRESULT OnDisplayChanged(WPARAM wParam, LPARAM lParam);
+
+
 private:
     std::unique_ptr<AppContext> _appContext;
     CComboBox _wndListCombobox;
 public:
     afx_msg void OnBnClickedBtnStop();
+
+	void OnCaptureFrame(VideoFrame *frame);
+    CStatic _previewWnd;
 };

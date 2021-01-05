@@ -4,6 +4,13 @@
 
 #include "DesktopRect.h"
 
+#include <memory>
+#include <mutex>
+
+#include "VideoFrame.h"
+
+typedef void (*funcCaptureCallback)(VideoFrame* frame, void* args);
+
 class MagCapture
 {
 public:
@@ -17,6 +24,7 @@ public:
     bool stop();
     bool OnCaptured(void* srcdata, MAGIMAGEHEADER srcheader);
     bool CaptureImage(const DesktopRect& rect);
+    bool setCallback(funcCaptureCallback, void*);
 
     static BOOL WINAPI OnMagImageScalingCallback(HWND hwnd,
         void* srcdata,
@@ -31,11 +39,17 @@ protected:
     bool destoryMagnifier();
 
 private:
-    MagInterface _apiList;
-    HWND _hostWnd = NULL;
-    HWND _magWnd = NULL;
+    std::unique_ptr<MagInterface> _api = nullptr;
+
+    HWND _hostWnd = nullptr;
+    HWND _magWnd = nullptr;
     bool _bMagInit = false;
-    HMODULE _hMagModule = NULL;
+    HMODULE _hMagModule = nullptr;
     bool _bCapSuccess = false;
+    std::recursive_mutex _cbMutex;
+    funcCaptureCallback _callback = nullptr;
+    void *_callbackargs = nullptr;
+
+    std::unique_ptr<VideoFrame> _frames;
 };
 

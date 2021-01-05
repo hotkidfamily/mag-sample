@@ -2,14 +2,23 @@
 #include "DesktopRect.h"
 #include "MagCapture.h"
 
+#include <mutex>
+
 static wchar_t kMagnifierHostClass[] = L"ScreenCapturerWinMagnifierHost";
 static wchar_t kHostWindowName[] = L"MagnifierHost";
 static wchar_t kMagnifierWindowClass[] = L"Magnifier";
 static wchar_t kMagnifierWindowName[] = L"MagnifierWindow";
 
+DWORD GetTlsIndex()
+{
+    static DWORD tlsIndex = TlsAlloc();
+    return tlsIndex;
+}
+
 
 MagCapture::MagCapture()
 {
+
 }
 
 
@@ -25,33 +34,32 @@ bool MagCapture::loadMagnificationAPI()
 
 
     if (_hMagModule) {
+        _api.reset(new MagInterface());
 
-        memset(&_apiList, 0, sizeof(_apiList));
-
-        _apiList.Initialize = reinterpret_cast<fnMagInitialize>(
+        _api->Initialize = reinterpret_cast<fnMagInitialize>(
             GetProcAddress(_hMagModule, "MagInitialize"));
-        _apiList.Uninitialize = reinterpret_cast<fnMagUninitialize>(
+        _api->Uninitialize = reinterpret_cast<fnMagUninitialize>(
             GetProcAddress(_hMagModule, "MagUninitialize"));
-        _apiList.SetWindowFilterList = reinterpret_cast<fnMagSetWindowFilterList>(
+        _api->SetWindowFilterList = reinterpret_cast<fnMagSetWindowFilterList>(
             GetProcAddress(_hMagModule, "MagSetWindowFilterList"));
-        _apiList.GetWindowFilterList = reinterpret_cast<fnMagGetWindowFilterList>(
+        _api->GetWindowFilterList = reinterpret_cast<fnMagGetWindowFilterList>(
             GetProcAddress(_hMagModule, "MagGetWindowFilterList"));
-        _apiList.SetWindowSource = reinterpret_cast<fnMagSetWindowSource>(
+        _api->SetWindowSource = reinterpret_cast<fnMagSetWindowSource>(
             GetProcAddress(_hMagModule, "MagSetWindowSource"));
-        _apiList.GetWindowSource = reinterpret_cast<fnMagGetWindowSource>(
+        _api->GetWindowSource = reinterpret_cast<fnMagGetWindowSource>(
             GetProcAddress(_hMagModule, "MagGetWindowSource"));
-        _apiList.SetImageScalingCallback = reinterpret_cast<fnMagSetImageScalingCallback>(
+        _api->SetImageScalingCallback = reinterpret_cast<fnMagSetImageScalingCallback>(
             GetProcAddress(_hMagModule, "MagSetImageScalingCallback"));
     }
 
     ret = !(!_hMagModule
-        || !_apiList.Initialize
-        || !_apiList.Uninitialize
-        || !_apiList.SetWindowFilterList
-        || !_apiList.GetWindowFilterList
-        || !_apiList.SetWindowSource
-        || !_apiList.GetWindowSource
-        || !_apiList.SetImageScalingCallback);
+        || !_api->Initialize
+        || !_api->Uninitialize
+        || !_api->SetWindowFilterList
+        || !_api->GetWindowFilterList
+        || !_api->SetWindowSource
+        || !_api->GetWindowSource
+        || !_api->SetImageScalingCallback);
 
     return ret;
 }
@@ -70,7 +78,7 @@ bool MagCapture::initMagnifier() {
         return false;
     }
 
-    BOOL result = _apiList.Initialize();
+    BOOL result = _api->Initialize();
     if (!result) {
         return false;
     }
@@ -81,7 +89,7 @@ bool MagCapture::initMagnifier() {
             GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
             reinterpret_cast<char*>(&DefWindowProc), &hInstance);
     if (!result) {
-        _apiList.Uninitialize();
+        _api->Uninitialize();
         return false;
     }
 
@@ -102,7 +110,7 @@ bool MagCapture::initMagnifier() {
         CreateWindowExW(WS_EX_LAYERED, kMagnifierHostClass, kHostWindowName, 0, 0,
             0, 0, 0, nullptr, nullptr, hInstance, nullptr);
     if (!_hostWnd) {
-        _apiList.Uninitialize();
+        _api->Uninitialize();
         return false;
     }
 
@@ -113,7 +121,7 @@ bool MagCapture::initMagnifier() {
         WS_CHILD | WS_VISIBLE, 0, 0, 0, 0,
         _hostWnd, nullptr, hInstance, nullptr);
     if (!_magWnd) {
-        _apiList.Uninitialize();
+        _api->Uninitialize();
         return false;
     }
 
@@ -121,15 +129,13 @@ bool MagCapture::initMagnifier() {
     ShowWindow(_hostWnd, SW_HIDE);
 
     // Set the scaling callback to receive captured image.
-    result = _apiList.SetImageScalingCallback(
+    result = _api->SetImageScalingCallback(
         _magWnd,
         &MagCapture::OnMagImageScalingCallback);
     if (!result) {
-        _apiList.Uninitialize();
+        _api->Uninitialize();
         return false;
     }
-
-    //SetWindowLongPtr(_magWnd, 0, (LONG_PTR)this);
 
 #if 0
     if (excluded_window_) {
@@ -157,8 +163,8 @@ bool MagCapture::destoryMagnifier()
     if (_hostWnd)
         DestroyWindow(_hostWnd);
 
-     if (_apiList.Uninitialize)
-        _apiList.Uninitialize();
+     if (_api->Uninitialize)
+        _api->Uninitialize();
 
     if (_hMagModule)
         FreeLibrary(_hMagModule);
@@ -176,18 +182,47 @@ BOOL WINAPI MagCapture::OnMagImageScalingCallback(HWND hwnd,
     RECT clipped,
     HRGN dirty)
 {
-    MagCapture* owner =
-        reinterpret_cast<MagCapture*>(GetWindowLongPtr(hwnd, NULL));
+    MagCapture *owner = reinterpret_cast<MagCapture *>(TlsGetValue(GetTlsIndex()));
+    
     if (owner)
         owner->OnCaptured(srcdata, srcheader);
 
     return TRUE;
 }
 
-bool MagCapture::OnCaptured(void* srcdata, MAGIMAGEHEADER srcheader)
+bool MagCapture::OnCaptured(void *srcdata, MAGIMAGEHEADER header)
 {
     _bCapSuccess = true;
+
+    int bpp = header.cbSize / header.width / header.height; // bpp should be 4
+    if (!_frames.get() || header.format != GUID_WICPixelFormat32bppRGBA || header.width != static_cast<UINT>(_frames->width())
+        || header.height != static_cast<UINT>(_frames->height()) || header.stride != static_cast<UINT>(_frames->stride())
+        || bpp != 4) {
+        _frames.reset(VideoFrame::MakeFrame(header.width, header.height, header.stride,
+                                            VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
+    }
+
+    {
+        std::lock_guard<decltype(_cbMutex)> guard(_cbMutex);
+
+        memcpy(_frames->data(), srcdata, header.stride * header.height);
+
+        if (_callback) {
+            _callback(_frames.get(), _callbackargs);
+        }
+    }
+
     return false;
+}
+
+bool MagCapture::setCallback(funcCaptureCallback fcb, void* args)
+{
+    {
+        std::lock_guard<decltype(_cbMutex)> guard(_cbMutex);
+        _callback = fcb;
+        _callbackargs = args;
+    }
+    return true;
 }
 
 
@@ -209,9 +244,11 @@ bool MagCapture::CaptureImage(const DesktopRect& rect)
 
     _bCapSuccess = false;
 
+    TlsSetValue(GetTlsIndex(), this);
+
     // OnCaptured will be called via OnMagImageScalingCallback and fill in the
     // frame before set_window_source_func_ returns.
-    result = _apiList.SetWindowSource(_magWnd, native_rect);
+    result = _api->SetWindowSource(_magWnd, native_rect);
 
     if (!result) {
         return false;

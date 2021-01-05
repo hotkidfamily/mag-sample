@@ -66,6 +66,7 @@ void CmymagsampleDlg::DoDataExchange(CDataExchange* pDX)
 {
     CDialogEx::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_COMBO_WNDLIST, _wndListCombobox);
+    DDX_Control(pDX, IDC_STATIC_PVWWND, _previewWnd);
 }
 
 BEGIN_MESSAGE_MAP(CmymagsampleDlg, CDialogEx)
@@ -77,7 +78,8 @@ BEGIN_MESSAGE_MAP(CmymagsampleDlg, CDialogEx)
     ON_BN_CLICKED(IDC_BUTTON_FINDWIND, &CmymagsampleDlg::OnBnClickedButtonFindwind)
     ON_BN_CLICKED(IDC_BTN_SCREENCAP, &CmymagsampleDlg::OnBnClickedBtnScreencap)
     ON_BN_CLICKED(IDC_BTN_STOP, &CmymagsampleDlg::OnBnClickedBtnStop)
-END_MESSAGE_MAP()
+    ON_MESSAGE(WM_DISPLAYCHANGE, &CmymagsampleDlg::OnDisplayChanged)
+    END_MESSAGE_MAP()
 
 
 // CmymagsampleDlg message handlers
@@ -158,6 +160,12 @@ void CmymagsampleDlg::OnPaint()
 	}
 }
 
+LRESULT CmymagsampleDlg::OnDisplayChanged(WPARAM wParam, LPARAM lParam)
+{
+    lParam = lParam;
+    return 0;
+}
+
 // The system calls this function to obtain the cursor to display while the user drags
 //  the minimized window.
 HCURSOR CmymagsampleDlg::OnQueryDragIcon()
@@ -166,17 +174,26 @@ HCURSOR CmymagsampleDlg::OnQueryDragIcon()
 }
 
 
+void CmymagsampleDlg::OnCaptureFrame(VideoFrame *frame)
+{
+    auto &render = _appContext->render;
+    render.render->display(*frame);
+}
+
+void CaptureCallback(VideoFrame *frame, void *args)
+{
+    CmymagsampleDlg *pDlg = reinterpret_cast<CmymagsampleDlg *>(args);
+    pDlg->OnCaptureFrame(frame);
+}
+
+
 void CmymagsampleDlg::OnBnClickedBtnWndcap()
 {
     auto &timer = _appContext->timer;
     auto &capture = _appContext->capture;
-    if (timer.timerInst) {
-        KillTimer(timer.timerID);
-        timer.timerInst = 0;
-    }
-    timer.fps = 10;
-    timer.timerID = TIMER_CAPTURE;
-    timer.timerInst = SetTimer(timer.timerID, 1000/timer.fps, NULL);
+    auto &render = _appContext->render;
+
+    OnBnClickedBtnStop();
 
     try {
         capture.winID = _wndList.at(_wndListCombobox.GetCurSel()).Hwnd();
@@ -185,8 +202,18 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
     }
 
     capture.capture.reset(new MagCapture());
+    capture.capture->setCallback(CaptureCallback, this);
     capture.capture->startCaptureWindow(capture.winID);
-    
+
+    if (render.render) {
+        render.render.reset(nullptr);
+    }
+	render.render.reset(new d3drender);
+    render.render->init(_previewWnd.GetSafeHwnd());
+
+	timer.fps = 10;
+    timer.timerID = TIMER_CAPTURE;
+    timer.timerInst = SetTimer(timer.timerID, 1000 / timer.fps, NULL);
 }
 
 
@@ -230,21 +257,45 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
 {
     auto &timer = _appContext->timer;
     auto &capture = _appContext->capture;
-    if (timer.timerInst) {
-        KillTimer(timer.timerID);
-        timer.timerInst = 0;
+    auto &render = _appContext->render;
+
+    OnBnClickedBtnStop();
+
+    capture.screenID = MonitorFromWindow(GetSafeHwnd(), MONITOR_DEFAULTTONEAREST);
+
+    capture.capture.reset(new MagCapture());
+    capture.capture->setCallback(CaptureCallback, this);
+    capture.capture->startCaptureWindow(capture.winID);
+
+    if (render.render) {
+        render.render.reset(nullptr);
     }
+    render.render.reset(new d3drender);
+    render.render->init(_previewWnd.GetSafeHwnd());
+
     timer.fps = 10;
     timer.timerID = TIMER_CAPTURE;
     timer.timerInst = SetTimer(timer.timerID, 1000 / timer.fps, NULL);
-
-    capture.screenID = MonitorFromWindow(GetSafeHwnd(), MONITOR_DEFAULTTONEAREST);
 }
 
 
 void CmymagsampleDlg::OnBnClickedBtnStop()
 {
+    auto &timer = _appContext->timer;
     auto &capture = _appContext->capture;
+    auto &render = _appContext->render;
+
     if(capture.capture.get())
         capture.capture.reset(nullptr);
+
+    if (timer.timerInst) {
+        KillTimer(timer.timerID);
+        timer.timerInst = 0;
+    }
+
+    if (render.render) {
+        render.render.reset(nullptr);
+    }
+
+    _previewWnd.InvalidateRect(NULL);
 }
