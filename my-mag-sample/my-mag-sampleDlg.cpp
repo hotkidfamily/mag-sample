@@ -195,6 +195,15 @@ LRESULT CmymagsampleDlg::OnDisplayChanged(WPARAM wParam, LPARAM lParam)
     capturer.rect.set_width(LOWORD(lParam));
     capturer.rect.set_width(HIWORD(lParam));
 
+    if (capturer.capturer.get()) {
+        if (capturer.winID) {
+            OnBnClickedBtnWndcap();
+        }
+        else if (capturer.screenID) {
+            OnBnClickedBtnScreencap();
+        }
+    }
+
     return 0;
 }
 
@@ -208,7 +217,11 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
         if (S_OK != DwmGetWindowAttribute(capturer.winID, DWMWA_EXTENDED_FRAME_BOUNDS, &wRect, sizeof(RECT))) {
             ::GetWindowRect(capturer.winID, &wRect);
         }
-        capturer.rect = DesktopRect::MakeRECT(wRect);
+        UINT wndDpi = GetDpiForWindow(capturer.winID);
+        DWORD processID;
+        GetWindowThreadProcessId(capturer.winID, &processID);
+
+        capturer.rect = DesktopRect::MakeRECT(wRect, wndDpi*1.0f/CapUtility::kDesktopCaptureDefaultDPI);
 
         std::vector<HWND> wndList = CapUtility::getWindowsCovered(capturer.winID);
 
@@ -311,6 +324,7 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     }
     render.render.reset(new d3drender);
     render.render->init(_previewWnd.GetSafeHwnd());
+    render.render->setMode(2);
 
     timer.fps = 10;
     timer.timerID = TIMER_SCREEN_CAPTURE;

@@ -91,6 +91,15 @@ public:
     {
         return DesktopRect(rect.left, rect.top, rect.right, rect.bottom);
     }
+
+    static DesktopRect MakeRECT(RECT rect, float dpi)
+    {
+        rect.left = (LONG)(rect.left *1.0f / dpi);
+        rect.top = (LONG)(rect.top * 1.0f / dpi);
+        rect.right = (LONG)(rect.right * 1.0f / dpi);
+        rect.bottom = (LONG)(rect.bottom * 1.0f / dpi);
+        return DesktopRect(rect.left, rect.top, rect.right, rect.bottom);
+    }
     #endif
 
     DesktopRect() : left_(0), top_(0), right_(0), bottom_(0) {}
