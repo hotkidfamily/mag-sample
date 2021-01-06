@@ -59,7 +59,7 @@ class VideoFrame {
         return 4;
     }
     
-    int8_t* data() const
+    uint8_t* data() const
     {
         return _data;
     }
@@ -76,12 +76,12 @@ class VideoFrame {
         _height = h;
         _stride[0] = s;
         _pixelType = t;
-        _data = (int8_t *)_aligned_malloc(h * s, 32);
+        _data = (uint8_t *)_aligned_malloc(h * s, 32);
     }
 
     int32_t _width = 0;
     int32_t _height = 0;
     int32_t _stride[kVideoFrameMaxPlane];
     VideoFrameType _pixelType = VideoFrameType::kVideoFrameTypeRGBA;
-    int8_t *_data = nullptr;
+    uint8_t *_data = nullptr;
 };

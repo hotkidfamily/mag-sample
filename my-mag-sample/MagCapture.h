@@ -19,7 +19,6 @@ public:
     ~MagCapture();
 
 public:
-    bool loadMagnificationAPI();
     bool startCaptureWindow(HWND hWnd);
     bool startCaptureScreen(HMONITOR hMonitor);
     bool stop();
@@ -29,21 +28,24 @@ public:
     bool setExcludeWindows(HWND hWnd);
     bool setExcludeWindows(std::vector<HWND> hWnd);
 
-    static BOOL WINAPI OnMagImageScalingCallback(HWND hwnd,
-        void* srcdata,
-        MAGIMAGEHEADER srcheader,
-        void* destdata,
-        MAGIMAGEHEADER destheader,
-        RECT unclipped,
-        RECT clipped,
-        HRGN dirty);
 protected:
     bool initMagnifier(DesktopRect &);
     bool destoryMagnifier();
+    bool loadMagnificationAPI();
+
+    static BOOL WINAPI OnMagImageScalingCallback(HWND hwnd,
+                                                 void *srcdata,
+                                                 MAGIMAGEHEADER srcheader,
+                                                 void *destdata,
+                                                 MAGIMAGEHEADER destheader,
+                                                 RECT unclipped,
+                                                 RECT clipped,
+                                                 HRGN dirty);
 
 private:
     std::unique_ptr<MagInterface> _api = nullptr;
     std::unique_ptr<VideoFrame> _frames;
+    DesktopRect _lastRect;
 
     HMODULE _hMagModule = nullptr;
 

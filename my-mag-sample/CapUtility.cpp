@@ -6,6 +6,7 @@
 namespace CapUtility
 {
 
+
 std::vector<HWND> getWindowsCovered(HWND hTartgetWnd)
 {
     std::set<HWND> wndlist;

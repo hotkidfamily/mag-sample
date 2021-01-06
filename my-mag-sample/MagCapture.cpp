@@ -2,6 +2,8 @@
 #include "DesktopRect.h"
 #include "MagCapture.h"
 
+#include "CapUtility.h"
+
 
 static wchar_t kMagnifierHostClass[] = L"ScreenCapturerWinMagnifierHost";
 static wchar_t kHostWindowName[] = L"MagnifierHost";
@@ -189,20 +191,32 @@ BOOL WINAPI MagCapture::OnMagImageScalingCallback(HWND hwnd,
 
 bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
 {
-    _bCapSuccess = true;
+    int width = _lastRect.width();
+    int height = _lastRect.height();
+    int stride = width * 4;
 
+    if (header.stride < stride) {
+        return false;
+    }
+    
     int bpp = header.cbSize / header.width / header.height; // bpp should be 4
-    if (!_frames.get() || header.format != GUID_WICPixelFormat32bppRGBA || header.width != static_cast<UINT>(_frames->width())
-        || header.height != static_cast<UINT>(_frames->height()) || header.stride != static_cast<UINT>(_frames->stride())
-        || bpp != 4) {
-        _frames.reset(VideoFrame::MakeFrame(header.width, header.height, header.stride,
+    if (!_frames.get() || header.format != GUID_WICPixelFormat32bppRGBA || header.width != static_cast<UINT>(_frames->width()) || header.height != static_cast<UINT>(_frames->height())
+        || header.stride != static_cast<UINT>(_frames->stride()) || bpp != CapUtility::kDesktopCaptureBPP) {
+        _frames.reset(VideoFrame::MakeFrame(width, height, stride,
                                             VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
     }
 
     {
-        std::lock_guard<decltype(_cbMutex)> guard(_cbMutex);
+        uint8_t *pDst = reinterpret_cast<uint8_t*>(_frames->data());
+        uint8_t *pSrc = reinterpret_cast<uint8_t*>(srcdata);
 
-        memcpy(_frames->data(), srcdata, header.stride * header.height);
+        for (int i = 0; i < height; i++) {
+            memcpy(pDst, pSrc, stride);
+            pDst += stride;
+            pSrc += header.stride;
+        }
+
+        std::lock_guard<decltype(_cbMutex)> guard(_cbMutex);
 
         if (_callback) {
             _callback(_frames.get(), _callbackargs);
@@ -225,32 +239,21 @@ bool MagCapture::setCallback(funcCaptureCallback fcb, void* args)
 
 bool MagCapture::captureImage(const DesktopRect& rect) 
 {
+    bool bRet = false;
     __try {
-        // Set the magnifier control to cover the captured rect. The content of the
-        // magnifier control will be the captured image.
-//         BOOL result = SetWindowPos(_magWnd, NULL, rect.left(), rect.top(), rect.width(), rect.height(), 0);
-//         if (!result) {
-//             return false;
-//         }
-        BOOL result;
-        RECT native_rect;
-        native_rect.left = rect.left();
-        native_rect.top = rect.top();
-        native_rect.right = rect.right();
-        native_rect.bottom = rect.bottom();
+        RECT wRect = { rect.left(), rect.top(), rect.right(), rect.bottom() };
 
-        _bCapSuccess = false;
-
+        _lastRect = rect;
         TlsSetValue(GetTlsIndex(), this);
 
         // OnCaptured will be called via OnMagImageScalingCallback and fill in the
         // frame before set_window_source_func_ returns.
-        result = _api->SetWindowSource(_magWnd, native_rect);
+        bRet = _api->SetWindowSource(_magWnd, wRect);
     } __except (EXCEPTION_EXECUTE_HANDLER) {
-        _bCapSuccess = false;
+        bRet = false;
     }
 
-    return _bCapSuccess;
+    return bRet;
 }
 
 
