@@ -21,6 +21,9 @@
     <ClInclude Include="AppContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CapUtility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="d3drender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -53,6 +56,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CapUtility.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="d3drender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

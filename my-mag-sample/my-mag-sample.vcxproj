@@ -84,16 +84,22 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)Output\$(PlatformTarget)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)Output\Obj\$(TargetName)\$(PlatformTarget)\$(Configuration)\</IntDir>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(DXSDK_DIR)Include;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(DXSDK_DIR)Lib\$(PlatformTarget)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)Output\$(PlatformTarget)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)Output\Obj\$(TargetName)\$(PlatformTarget)\$(Configuration)\</IntDir>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(DXSDK_DIR)Include;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(DXSDK_DIR)Lib\$(PlatformTarget)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)Output\$(PlatformTarget)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)Output\Obj\$(TargetName)\$(PlatformTarget)\$(Configuration)\</IntDir>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(DXSDK_DIR)Include;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(DXSDK_DIR)Lib\$(PlatformTarget)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -125,6 +131,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -197,6 +204,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppContext.h" />
+    <ClInclude Include="CapUtility.h" />
     <ClInclude Include="d3drender.h" />
     <ClInclude Include="DesktopRect.h" />
     <ClInclude Include="MagCapture.h" />
@@ -209,6 +217,7 @@
     <ClInclude Include="Win32WindowEnumeration.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CapUtility.cpp" />
     <ClCompile Include="d3drender.cpp" />
     <ClCompile Include="MagCapture.cpp" />
     <ClCompile Include="my-mag-sample.cpp" />

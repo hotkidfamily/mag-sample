@@ -86,6 +86,13 @@ public:
         return MakeXYWH(origin.x(), origin.y(), size.width(), size.height());
     }
 
+    #if _WIN32
+    static DesktopRect MakeRECT(RECT rect)
+    {
+        return DesktopRect(rect.left, rect.top, rect.right, rect.bottom);
+    }
+    #endif
+
     DesktopRect() : left_(0), top_(0), right_(0), bottom_(0) {}
 
     int32_t left() const { return left_; }

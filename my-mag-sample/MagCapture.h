@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <mutex>
+#include <vector>
 
 #include "VideoFrame.h"
 
@@ -25,6 +26,8 @@ public:
     bool onCaptured(void* srcdata, MAGIMAGEHEADER srcheader);
     bool captureImage(const DesktopRect& rect);
     bool setCallback(funcCaptureCallback, void*);
+    bool setExcludeWindows(HWND hWnd);
+    bool setExcludeWindows(std::vector<HWND> hWnd);
 
     static BOOL WINAPI OnMagImageScalingCallback(HWND hwnd,
         void* srcdata,
@@ -35,21 +38,21 @@ public:
         RECT clipped,
         HRGN dirty);
 protected:
-    bool initMagnifier();
+    bool initMagnifier(DesktopRect &);
     bool destoryMagnifier();
 
 private:
     std::unique_ptr<MagInterface> _api = nullptr;
+    std::unique_ptr<VideoFrame> _frames;
+
+    HMODULE _hMagModule = nullptr;
 
     HWND _hostWnd = nullptr;
     HWND _magWnd = nullptr;
     bool _bMagInit = false;
-    HMODULE _hMagModule = nullptr;
-    bool _bCapSuccess = false;
+
     std::recursive_mutex _cbMutex;
     funcCaptureCallback _callback = nullptr;
     void *_callbackargs = nullptr;
-
-    std::unique_ptr<VideoFrame> _frames;
 };
 

@@ -2,7 +2,6 @@
 #include "DesktopRect.h"
 #include "MagCapture.h"
 
-#include <mutex>
 
 static wchar_t kMagnifierHostClass[] = L"ScreenCapturerWinMagnifierHost";
 static wchar_t kHostWindowName[] = L"MagnifierHost";
@@ -65,7 +64,7 @@ bool MagCapture::loadMagnificationAPI()
 }
 
 
-bool MagCapture::initMagnifier() {
+bool MagCapture::initMagnifier(DesktopRect &rect) {
 
     //if (GetSystemMetrics(SM_CMONITORS) != 1) {
     //  // Do not try to use the magnifier in multi-screen setup (where the API
@@ -106,19 +105,17 @@ bool MagCapture::initMagnifier() {
     RegisterClassExW(&wcex);
 
     // Create the host window.
-    _hostWnd =
-        CreateWindowExW(WS_EX_LAYERED, kMagnifierHostClass, kHostWindowName, 0, 0,
+    _hostWnd = CreateWindowExW(WS_EX_LAYERED, kMagnifierHostClass, kHostWindowName, 0, 0,
             0, 0, 0, nullptr, nullptr, hInstance, nullptr);
     if (!_hostWnd) {
         _api->Uninitialize();
         return false;
     }
 
-    SetWindowLongPtr(_hostWnd, 0, (LONG_PTR)this);
+
 
     // Create the magnifier control.
-    _magWnd = CreateWindowW(kMagnifierWindowClass, kMagnifierWindowName,
-        WS_CHILD | WS_VISIBLE, 0, 0, 0, 0,
+    _magWnd = CreateWindowW(kMagnifierWindowClass, kMagnifierWindowName, WS_CHILD | WS_VISIBLE, 0, 0, rect.width(), rect.height(),
         _hostWnd, nullptr, hInstance, nullptr);
     if (!_magWnd) {
         _api->Uninitialize();
@@ -228,33 +225,60 @@ bool MagCapture::setCallback(funcCaptureCallback fcb, void* args)
 
 bool MagCapture::captureImage(const DesktopRect& rect) 
 {
-    // Set the magnifier control to cover the captured rect. The content of the
-    // magnifier control will be the captured image.
-    BOOL result = SetWindowPos(_magWnd, NULL, rect.left(), rect.top(),
-        rect.width(), rect.height(), 0);
-    if (!result) {
-        return false;
+    __try {
+        // Set the magnifier control to cover the captured rect. The content of the
+        // magnifier control will be the captured image.
+//         BOOL result = SetWindowPos(_magWnd, NULL, rect.left(), rect.top(), rect.width(), rect.height(), 0);
+//         if (!result) {
+//             return false;
+//         }
+        BOOL result;
+        RECT native_rect;
+        native_rect.left = rect.left();
+        native_rect.top = rect.top();
+        native_rect.right = rect.right();
+        native_rect.bottom = rect.bottom();
+
+        _bCapSuccess = false;
+
+        TlsSetValue(GetTlsIndex(), this);
+
+        // OnCaptured will be called via OnMagImageScalingCallback and fill in the
+        // frame before set_window_source_func_ returns.
+        result = _api->SetWindowSource(_magWnd, native_rect);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        _bCapSuccess = false;
     }
 
-    RECT native_rect;
-    native_rect.left = rect.left();
-    native_rect.top = rect.top();
-    native_rect.right = rect.right();
-    native_rect.bottom = rect.bottom();
-
-    _bCapSuccess = false;
-
-    TlsSetValue(GetTlsIndex(), this);
-
-    // OnCaptured will be called via OnMagImageScalingCallback and fill in the
-    // frame before set_window_source_func_ returns.
-    result = _api->SetWindowSource(_magWnd, native_rect);
-
-    if (!result) {
-        return false;
-    }
     return _bCapSuccess;
 }
+
+
+bool MagCapture::setExcludeWindows(HWND hWnd)
+{
+    bool ret = false;
+
+    if (_bMagInit) {
+    }
+
+    _api->SetWindowFilterList(_magWnd, MW_FILTERMODE_EXCLUDE, 1, &hWnd);
+
+    return ret;
+}
+
+bool MagCapture::setExcludeWindows(std::vector<HWND> hWnd)
+{
+    bool ret = false;
+
+    if (_bMagInit) {
+    }
+
+    _api->SetWindowFilterList(_magWnd, MW_FILTERMODE_EXCLUDE, hWnd.size(), hWnd.data());
+
+    return ret;
+}
+
+
 
 bool MagCapture::startCaptureWindow(HWND hWnd)
 {
@@ -263,12 +287,18 @@ bool MagCapture::startCaptureWindow(HWND hWnd)
     if (_bMagInit) {
 
     }
+    HMONITOR hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO minfo;
+    minfo.cbSize = sizeof(MONITORINFO);
+    GetMonitorInfo(hMonitor, &minfo);
+    DesktopRect rect = DesktopRect::MakeRECT(minfo.rcMonitor);
 
-    initMagnifier();
-
+    initMagnifier(rect);
 
     return ret;
 }
+
+
 bool MagCapture::startCaptureScreen(HMONITOR hMonitor)
 {
     bool ret = false;
@@ -276,7 +306,14 @@ bool MagCapture::startCaptureScreen(HMONITOR hMonitor)
     if (_bMagInit) {
 
     }
-    initMagnifier();
+
+    MONITORINFO minfo;
+    minfo.cbSize = sizeof(MONITORINFO);
+    GetMonitorInfo(hMonitor, &minfo);
+    DesktopRect rect = DesktopRect::MakeRECT(minfo.rcMonitor);
+
+    initMagnifier(rect);
+
     return ret;
 }
 

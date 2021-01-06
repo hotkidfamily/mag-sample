@@ -125,6 +125,13 @@ BOOL IsUWPApp(Window wnd)
     return ret;
 }
 
+BOOL IsInvalidWindow(Window wnd)
+{
+    RECT rect;
+    GetWindowRect(wnd.Hwnd(), &rect);
+    return IsRectEmpty(&rect);
+}
+
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
     auto class_name = GetClassName(hwnd);
@@ -141,7 +148,11 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
         return TRUE;
     }
 
-    if (IsUWPApp(window)) {
+    //if (IsUWPApp(window)) {
+    //    return TRUE;
+    //}
+
+    if (IsInvalidWindow(window)) {
         return TRUE;
     }
 

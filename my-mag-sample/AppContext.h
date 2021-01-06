@@ -14,17 +14,16 @@ typedef struct tagAppContext
     }timer;
 
     struct {
+        std::unique_ptr<MagCapture> capturer;
+
         HWND winID;
         HMONITOR screenID;
-        std::unique_ptr<MagCapture> capture;
-    }capture;
+
+        DesktopRect rect;
+    }capturer;
 
     struct
     {
         std::unique_ptr<d3drender> render;
-        DWORD threadID;
-        HANDLE threadInst;
-        HANDLE threadEvent;
-        BOOL bQuit;
     }render;
 }AppContext;

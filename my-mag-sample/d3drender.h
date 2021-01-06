@@ -24,7 +24,7 @@ public:
 
 protected:
     HRESULT _compile_sharder(VideoFrame::VideoFrameType type);
-  HRESULT _setupVertex(VideoFrame::VideoFrameType type);
+    HRESULT _setupVertex(VideoFrame::VideoFrameType type);
     HRESULT _reallocTexture(CSize destBufSize, VideoFrame::VideoFrameType destBufFormat);
     HRESULT _copyToTexture(const VideoFrame &frame);
     HRESULT _resetDevice(CRect &wndRect);
