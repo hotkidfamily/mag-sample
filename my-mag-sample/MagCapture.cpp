@@ -66,15 +66,8 @@ bool MagCapture::loadMagnificationAPI()
 }
 
 
-bool MagCapture::initMagnifier(DesktopRect &rect) {
-
-    //if (GetSystemMetrics(SM_CMONITORS) != 1) {
-    //  // Do not try to use the magnifier in multi-screen setup (where the API
-    //  // crashes sometimes).
-    //  //RTC_LOG_F(LS_WARNING) << "Magnifier capturer cannot work on multi-screen "
-    //  //                         "system.";
-    //  return false;
-    //}
+bool MagCapture::initMagnifier(DesktopRect &rect)
+{
     if (!loadMagnificationAPI()) {
         return false;
     }
@@ -136,21 +129,6 @@ bool MagCapture::initMagnifier(DesktopRect &rect) {
         return false;
     }
 
-#if 0
-    if (excluded_window_) {
-        result = set_window_filter_list_func_(
-            magnifier_window_, MW_FILTERMODE_EXCLUDE, 1, &excluded_window_);
-        if (!result) {
-            mag_uninitialize_func_();
-            //RTC_LOG_F(LS_WARNING)
-            //    << "Failed to initialize ScreenCapturerWinMagnifier: "
-            //       "error from MagSetWindowFilterList "
-            //    << GetLastError();
-            return false;
-        }
-    }
-#endif
-
     _bMagInit = true;
     return true;
 }
@@ -200,8 +178,9 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
     }
     
     int bpp = header.cbSize / header.width / header.height; // bpp should be 4
-    if (!_frames.get() || header.format != GUID_WICPixelFormat32bppRGBA || header.width != static_cast<UINT>(_frames->width()) || header.height != static_cast<UINT>(_frames->height())
-        || header.stride != static_cast<UINT>(_frames->stride()) || bpp != CapUtility::kDesktopCaptureBPP) {
+    if (!_frames.get() || header.format != GUID_WICPixelFormat32bppRGBA 
+        || width != static_cast<UINT>(_frames->width()) || height != static_cast<UINT>(_frames->height())
+        || stride != static_cast<UINT>(_frames->stride()) || bpp != CapUtility::kDesktopCaptureBPP) {
         _frames.reset(VideoFrame::MakeFrame(width, height, stride,
                                             VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
     }

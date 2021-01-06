@@ -29,10 +29,11 @@ std::vector<HWND> getWindowsCovered(HWND hTartgetWnd)
             HWND rootWnd = enumWnd;
 
             if (style & WS_POPUP) {
-                if ((rootWnd = GetAncestor(enumWnd, GA_PARENT)) == shell) {             // 父窗口是桌面
-                    if (hTartgetWnd == (rootWnd = GetAncestor(enumWnd, GA_ROOTOWNER))) { // 如果有 owner
-                        continue;
-                    }
+                if (hTartgetWnd == (rootWnd = GetAncestor(enumWnd, GA_ROOTOWNER))) { // 如果 owner 和 目标是一样的，不过滤
+                    continue;
+                }
+                else {
+                    rootWnd = enumWnd;
                 }
             }
 
