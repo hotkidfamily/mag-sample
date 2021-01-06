@@ -100,18 +100,16 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
     RegisterClassExW(&wcex);
 
     // Create the host window.
-    _hostWnd = CreateWindowExW(WS_EX_LAYERED, kMagnifierHostClass, kHostWindowName, 0, 0,
-            0, 0, 0, nullptr, nullptr, hInstance, nullptr);
+    _hostWnd = CreateWindowExW(WS_EX_LAYERED, kMagnifierHostClass, kHostWindowName, 0, 0, 0, rect.width(),
+                               rect.height(), nullptr, nullptr, hInstance, nullptr);
     if (!_hostWnd) {
         _api->Uninitialize();
         return false;
     }
 
-
-
     // Create the magnifier control.
-    _magWnd = CreateWindowW(kMagnifierWindowClass, kMagnifierWindowName, WS_CHILD | WS_VISIBLE, 0, 0, rect.width(), rect.height(),
-        _hostWnd, nullptr, hInstance, nullptr);
+    _magWnd = CreateWindowW(kMagnifierWindowClass, kMagnifierWindowName, WS_CHILD | WS_VISIBLE, 
+                            0, 0, rect.width(), rect.height(), _hostWnd, nullptr, hInstance, nullptr);
     if (!_magWnd) {
         _api->Uninitialize();
         return false;
@@ -176,7 +174,7 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
     if (header.stride < stride) {
         return false;
     }
-    
+
     int bpp = header.cbSize / header.width / header.height; // bpp should be 4
     if (!_frames.get() || header.format != GUID_WICPixelFormat32bppRGBA 
         || width != static_cast<UINT>(_frames->width()) || height != static_cast<UINT>(_frames->height())
@@ -186,15 +184,17 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
     }
 
     {
-        uint8_t *pDst = reinterpret_cast<uint8_t*>(_frames->data());
-        uint8_t *pSrc = reinterpret_cast<uint8_t*>(srcdata);
+        uint8_t *pDst = reinterpret_cast<uint8_t *>(_frames->data());
+        uint8_t *pSrc = reinterpret_cast<uint8_t *>(srcdata) + header.offset;
 
         for (int i = 0; i < height; i++) {
             memcpy(pDst, pSrc, stride);
             pDst += stride;
             pSrc += header.stride;
         }
+    }
 
+    {
         std::lock_guard<decltype(_cbMutex)> guard(_cbMutex);
 
         if (_callback) {
@@ -266,9 +266,6 @@ bool MagCapture::startCaptureWindow(HWND hWnd)
 {
     bool ret = false;
 
-    if (_bMagInit) {
-
-    }
     HMONITOR hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
     MONITORINFO minfo;
     minfo.cbSize = sizeof(MONITORINFO);
@@ -284,10 +281,6 @@ bool MagCapture::startCaptureWindow(HWND hWnd)
 bool MagCapture::startCaptureScreen(HMONITOR hMonitor)
 {
     bool ret = false;
-
-    if (_bMagInit) {
-
-    }
 
     MONITORINFO minfo;
     minfo.cbSize = sizeof(MONITORINFO);
