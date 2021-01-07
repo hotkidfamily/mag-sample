@@ -119,13 +119,15 @@ BOOL IsUWPFrameWorkApp(Window wnd)
 
     if (ret) {
         DWORD cloaked = FALSE;
+        ret = FALSE;
         if (_ptrDwmGetWindowAttribute) {
             HRESULT hrTemp = _ptrDwmGetWindowAttribute(wnd.Hwnd(), DWMWA_CLOAKED, &cloaked, sizeof(cloaked));
-            if (SUCCEEDED(hrTemp)) {
+            if (SUCCEEDED(hrTemp) && cloaked) {
                 ret = TRUE;
             }
         }
     }
+
     return ret;
 }
 
