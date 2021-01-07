@@ -94,6 +94,12 @@ bool IsAltTabWindow(Window const& window)
         return false;
     }
 
+    
+    LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    if (exStyle & WS_EX_TOOLWINDOW) {
+        return false;
+    }
+
     DWORD cloaked = FALSE;
     if (_ptrDwmGetWindowAttribute) {
         HRESULT hrTemp = _ptrDwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, &cloaked, sizeof(cloaked));
