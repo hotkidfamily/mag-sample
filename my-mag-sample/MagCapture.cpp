@@ -1,4 +1,6 @@
 #include "stdafx.h"
+
+
 #include "DesktopRect.h"
 #include "MagCapture.h"
 
@@ -261,7 +263,6 @@ bool MagCapture::setExcludeWindows(std::vector<HWND> hWnd)
 }
 
 
-
 bool MagCapture::startCaptureWindow(HWND hWnd)
 {
     bool ret = false;
@@ -270,6 +271,13 @@ bool MagCapture::startCaptureWindow(HWND hWnd)
     MONITORINFO minfo;
     minfo.cbSize = sizeof(MONITORINFO);
     GetMonitorInfo(hMonitor, &minfo);
+
+    UINT wndDPI;
+    CapUtility::getDPIForWindow(hWnd, &wndDPI);
+
+    UINT monitorDPI;
+    CapUtility::getDpiForMonitor(hMonitor, &monitorDPI);
+
     DesktopRect rect = DesktopRect::MakeRECT(minfo.rcMonitor);
 
     initMagnifier(rect);

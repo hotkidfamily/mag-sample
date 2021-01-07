@@ -217,10 +217,9 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
         if (S_OK != DwmGetWindowAttribute(capturer.winID, DWMWA_EXTENDED_FRAME_BOUNDS, &wRect, sizeof(RECT))) {
             ::GetWindowRect(capturer.winID, &wRect);
         }
-        UINT wndDpi = GetDpiForWindow(capturer.winID);
-        DWORD processID;
-        GetWindowThreadProcessId(capturer.winID, &processID);
-
+        UINT wndDpi;
+        CapUtility::getDPIForWindow(capturer.winID, &wndDpi);
+   
         capturer.rect = DesktopRect::MakeRECT(wRect, wndDpi*1.0f/CapUtility::kDesktopCaptureDefaultDPI);
 
         std::vector<HWND> wndList = CapUtility::getWindowsCovered(capturer.winID);
