@@ -13,7 +13,7 @@ typedef HRESULT (__stdcall *funcDwmGetWindowAttribute)(
 );
 
 
-static funcDwmGetWindowAttribute _ptrDwmGetWindowAttribute;
+static funcDwmGetWindowAttribute _ptrDwmGetWindowAttribute = nullptr;
 
 struct Window
 {
@@ -94,12 +94,6 @@ bool IsAltTabWindow(Window const& window)
         return false;
     }
 
-    if (!_ptrDwmGetWindowAttribute) {
-        HMODULE hmodule = LoadLibraryW(L"Dwmapi.dll");
-        _ptrDwmGetWindowAttribute 
-            = reinterpret_cast<funcDwmGetWindowAttribute>(GetProcAddress(hmodule, "DwmGetWindowAttributes"));
-    }
-
     DWORD cloaked = FALSE;
     if (_ptrDwmGetWindowAttribute) {
         HRESULT hrTemp = _ptrDwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, &cloaked, sizeof(cloaked));
@@ -118,10 +112,27 @@ BOOL IsWindowApp(Window wnd)
     return FALSE;
 }
 
-BOOL IsUWPApp(Window wnd) 
+BOOL IsUWPFrameWorkApp(Window wnd) 
 {
     BOOL ret = FALSE;
-    ret = wnd.ClassName() == L"ApplicationFrameWindow" || wnd.ClassName() == L"Windows.UI.Core.CoreWindow";
+    ret = wnd.ClassName() == L"ApplicationFrameWindow";
+
+    if (ret) {
+        DWORD cloaked = FALSE;
+        if (_ptrDwmGetWindowAttribute) {
+            HRESULT hrTemp = _ptrDwmGetWindowAttribute(wnd.Hwnd(), DWMWA_CLOAKED, &cloaked, sizeof(cloaked));
+            if (SUCCEEDED(hrTemp)) {
+                ret = TRUE;
+            }
+        }
+    }
+    return ret;
+}
+
+BOOL IsUWPApp(Window wnd)
+{ 
+    BOOL ret = wnd.ClassName() == L"Windows.UI.Core.CoreWindow";
+
     return ret;
 }
 
@@ -148,6 +159,10 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
         return TRUE;
     }
 
+    if (IsUWPFrameWorkApp(window)) {
+        return TRUE;
+    }
+
     //if (IsUWPApp(window)) {
     //    return TRUE;
     //}
@@ -165,7 +180,20 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 const std::vector<Window> EnumerateWindows()
 {
     std::vector<Window> windows;
+    HMODULE hmodule = nullptr;
+
+    if (!_ptrDwmGetWindowAttribute) {
+        hmodule = LoadLibraryW(L"Dwmapi.dll");
+        if (hmodule) {
+            _ptrDwmGetWindowAttribute
+                = reinterpret_cast<funcDwmGetWindowAttribute>(GetProcAddress(hmodule, "DwmGetWindowAttribute"));
+        }
+    }
+
     EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&windows));
+
+    if (hmodule)
+        FreeLibrary(hmodule);
 
     return windows;
 }
