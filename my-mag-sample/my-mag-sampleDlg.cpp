@@ -225,10 +225,12 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
 
         std::vector<HWND> wndList = CapUtility::getWindowsCovered(capturer.winID);
 
-        DesktopRect rect = capturer.rect;
-        if (capturer.capturer.get()) {
-            capturer.capturer->setExcludeWindows(wndList);
-            capturer.capturer->captureImage(rect);
+        if (IsWindow(capturer.winID) && !::IsIconic(capturer.winID) && ::IsWindowVisible(capturer.winID)) {
+            DesktopRect rect = capturer.rect;
+            if (capturer.capturer.get()) {
+                capturer.capturer->setExcludeWindows(wndList);
+                capturer.capturer->captureImage(rect);
+            }
         }
     }
     else if (TIMER_SCREEN_CAPTURE == nIDEvent) {
