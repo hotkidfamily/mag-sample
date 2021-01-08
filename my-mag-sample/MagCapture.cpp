@@ -5,6 +5,7 @@
 #include "MagCapture.h"
 
 #include "CapUtility.h"
+#include "Win32DispalyEnumeration.h"
 
 
 static wchar_t kMagnifierHostClass[] = L"ScreenCapturerWinMagnifierHost";
@@ -218,18 +219,26 @@ bool MagCapture::setCallback(funcCaptureCallback fcb, void* args)
 }
 
 
-bool MagCapture::captureImage(const DesktopRect& rect) 
+bool MagCapture::captureImage(const DesktopRect& capRect) 
 {
     bool bRet = false;
     __try {
-        RECT wRect = { rect.left(), rect.top(), rect.right(), rect.bottom() };
+        DesktopRect rect = capRect;
 
-        _lastRect = rect;
-        TlsSetValue(GetTlsIndex(), this);
+        if (capRect.width() > _memoryRect.width()) {
+            rect.IntersectWith(_memoryRect);
+        }
 
-        // OnCaptured will be called via OnMagImageScalingCallback and fill in the
-        // frame before set_window_source_func_ returns.
-        bRet = _api->SetWindowSource(_magWnd, wRect);
+        if (!rect.is_empty()) {
+            RECT wRect = { rect.left(), rect.top(), rect.right(), rect.bottom() };
+
+            _lastRect = rect;
+            TlsSetValue(GetTlsIndex(), this);
+
+            // OnCaptured will be called via OnMagImageScalingCallback and fill in the
+            // frame before set_window_source_func_ returns.
+            bRet = _api->SetWindowSource(_magWnd, wRect);
+        }
     } __except (EXCEPTION_EXECUTE_HANDLER) {
         bRet = false;
     }
@@ -274,13 +283,17 @@ bool MagCapture::startCaptureWindow(HWND hWnd)
 
     UINT wndDPI;
     CapUtility::getDPIForWindow(hWnd, &wndDPI);
+    double scale = CapUtility::kDesktopCaptureDefaultDPI * 1.0f / wndDPI;
 
-    UINT monitorDPI;
-    CapUtility::getDpiForMonitor(hMonitor, &monitorDPI);
+    _memoryRect = DesktopRect::MakeRECT(minfo.rcMonitor);
+    auto w = _memoryRect.width();
+    auto h = _memoryRect.height();
+    w = w * wndDPI / CapUtility::kDesktopCaptureDefaultDPI;
+    h = h * wndDPI / CapUtility::kDesktopCaptureDefaultDPI;
+    _memoryRect.set_width(w);
+    _memoryRect.set_height(h);
 
-    DesktopRect rect = DesktopRect::MakeRECT(minfo.rcMonitor);
-
-    initMagnifier(rect);
+    initMagnifier(_memoryRect);
 
     return ret;
 }
@@ -293,9 +306,11 @@ bool MagCapture::startCaptureScreen(HMONITOR hMonitor)
     MONITORINFO minfo;
     minfo.cbSize = sizeof(MONITORINFO);
     GetMonitorInfo(hMonitor, &minfo);
-    DesktopRect rect = DesktopRect::MakeRECT(minfo.rcMonitor);
+    std::vector<Monitor> displays = enumMonitor();
 
-    initMagnifier(rect);
+    _memoryRect = DesktopRect::MakeRECT(minfo.rcMonitor);
+
+    initMagnifier(_memoryRect);
 
     return ret;
 }

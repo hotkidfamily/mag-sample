@@ -9,4 +9,5 @@ const int kDesktopCaptureDefaultDPI = USER_DEFAULT_SCREEN_DPI;
 std::vector<HWND> getWindowsCovered(HWND hwnd);
 BOOL getDpiForMonitor(HMONITOR hm, UINT *DPI);
 BOOL getDPIForWindow(HWND hwnd, UINT *DPI);
+BOOL isWndCanCap(HWND hWnd);
 };

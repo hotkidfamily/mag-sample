@@ -46,6 +46,7 @@ private:
     std::unique_ptr<MagInterface> _api = nullptr;
     std::unique_ptr<VideoFrame> _frames;
     DesktopRect _lastRect;
+    DesktopRect _memoryRect;
 
     HMODULE _hMagModule = nullptr;
 

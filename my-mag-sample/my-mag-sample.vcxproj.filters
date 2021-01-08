@@ -51,6 +51,9 @@
     <ClInclude Include="VideoFrame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Win32DispalyEnumeration.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Win32WindowEnumeration.h">
       <Filter>Header Files</Filter>
     </ClInclude>

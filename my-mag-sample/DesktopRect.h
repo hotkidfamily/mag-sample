@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <algorithm>
 
 // A vector in the 2D integer space. E.g. can be used to represent screen DPI.
 class DesktopVector {
@@ -92,12 +93,12 @@ public:
         return DesktopRect(rect.left, rect.top, rect.right, rect.bottom);
     }
 
-    static DesktopRect MakeRECT(RECT rect, float dpi)
+    static DesktopRect MakeRECT(RECT rect, double dpi)
     {
-        rect.left = (LONG)(rect.left *1.0f / dpi);
-        rect.top = (LONG)(rect.top * 1.0f / dpi);
-        rect.right = (LONG)(rect.right * 1.0f / dpi);
-        rect.bottom = (LONG)(rect.bottom * 1.0f / dpi);
+        rect.left = (LONG)(rect.left);
+        rect.top = (LONG)(rect.top);
+        rect.right = (LONG)(rect.right / dpi);
+        rect.bottom = (LONG)(rect.bottom / dpi);
         return DesktopRect(rect.left, rect.top, rect.right, rect.bottom);
     }
     #endif
@@ -123,6 +124,25 @@ public:
         return left_ == other.left_ && top_ == other.top_ &&
             right_ == other.right_ && bottom_ == other.bottom_;
     }
+
+    #ifdef min
+    #undef min
+    #undef max
+    void DesktopRect::IntersectWith(const DesktopRect &rect)
+    {
+        left_ = std::max(left(), rect.left());
+        top_ = std::max(top(), rect.top());
+        right_ = std::min(right(), rect.right());
+        bottom_ = std::min(bottom(), rect.bottom());
+        if (is_empty()) {
+            left_ = 0;
+            top_ = 0;
+            right_ = 0;
+            bottom_ = 0;
+        }
+    }
+    #endif //min
+
 
 private:
     DesktopRect(int32_t left, int32_t top, int32_t right, int32_t bottom)
