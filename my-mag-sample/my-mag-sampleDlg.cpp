@@ -207,7 +207,6 @@ LRESULT CmymagsampleDlg::OnDisplayChanged(WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-
 void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
 {
     auto &capturer = _appContext->capturer;
@@ -219,27 +218,23 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
             ::GetWindowRect(hWnd, &wRect);
         }
 
-#if 0
         HMONITOR hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
-        MONITORINFO minfo;
-        minfo.cbSize = sizeof(MONITORINFO);
+        MONITORINFOEXW minfo;
+        minfo.cbSize = sizeof(MONITORINFOEXW);
         GetMonitorInfo(hMonitor, &minfo);
+        std::wstring str(minfo.szDevice);
+        CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByName(str);
+        DesktopRect monitorRect = DesktopRect::MakeRECT(settings.rect());
 
-        UINT wndDpi;
-        CapUtility::getDPIForWindow(capturer.winID, &wndDpi);
-        double scale = CapUtility::kDesktopCaptureDefaultDPI * 1.0f / wndDpi;
         capturer.rect = DesktopRect::MakeRECT(wRect);
-        DesktopRect mRect = DesktopRect::MakeRECT(minfo.rcMonitor);
-        if (capturer.rect.width() > mRect.width())
-            capturer.rect.IntersectWith(mRect);
-#else
-        capturer.rect = DesktopRect::MakeRECT(wRect);
-#endif
+        if (capturer.rect.width() > monitorRect.width()) { // out of screen
+            capturer.rect.IntersectWith(monitorRect);
+        }
 
         std::vector<HWND> wndList = CapUtility::getWindowsCovered(hWnd);
 
         if (CapUtility::isWndCanCap(hWnd)) {
-            DesktopRect rect = capturer.rect;
+            DesktopRect &rect = capturer.rect;
             if (capturer.capturer.get()) {
                 capturer.capturer->setExcludeWindows(wndList);
                 capturer.capturer->captureImage(rect);

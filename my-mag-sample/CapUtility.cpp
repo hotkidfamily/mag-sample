@@ -48,36 +48,16 @@ BOOL _getScaleForMonitor(HMONITOR hm, DEVICE_SCALE_FACTOR *scale)
 
 BOOL getDpiForMonitor(HMONITOR hMonitor, UINT *DPI)
 {
-    DPI_AWARENESS_CONTEXT priorCtx = SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-    SetThreadDpiAwarenessContext(priorCtx);
-
     DEVICE_SCALE_FACTOR scale;
     if (_getScaleForMonitor(hMonitor, &scale)) {
     }
+    UINT DPIX, DPIY;
+    if (_getDpiForMonitor(hMonitor, &DPIX, &DPIY)) {
 
-    MONITORINFO minfo;
-    minfo.cbSize = sizeof(MONITORINFO);
-    GetMonitorInfo(hMonitor, &minfo);
+    }
+	
+    *DPI = DPIX;
 
-    UINT DPIX = 0, DPIY = 0;
-    RECT &mRect = minfo.rcMonitor;
-    RECT rRect = mRect;
-
-    //DPI_AWARENESS_CONTEXT dpiAwarenessContext = GetWindowDpiAwarenessContext(hWnd);
-    //DPI_AWARENESS dpiAwareness = GetAwarenessFromDpiAwarenessContext(dpiAwarenessContext);
-    //UINT dpi = GetDpiForWindow(hWnd);
-    //BOOL bSuccess = CapUtility::getDpiForMonitor(hMonitor, &DPIX, &DPIY);
-    //switch (dpiAwareness) {
-    //case DPI_AWARENESS_UNAWARE:
-    //    break;
-    //case DPI_AWARENESS_SYSTEM_AWARE:
-    //    break;
-    //case DPI_AWARENESS_PER_MONITOR_AWARE:
-    //    break;
-    //case DPI_AWARENESS_INVALID:
-    //default:
-    //    break;
-    //}
     return TRUE;
 }
 
@@ -154,6 +134,85 @@ std::vector<HWND> getWindowsCovered(HWND hTartgetWnd)
     }
 
     return wndList2;
+}
+
+
+std::vector<DisplaySetting> _enumDisplaySetting()
+{
+    DISPLAY_DEVICEW device = { 0 };
+    device.cb = sizeof(DISPLAY_DEVICEW);
+
+    std::vector<DisplaySetting> settings;
+
+    for (int index = 0;; index++) {
+        if (!EnumDisplayDevicesW(NULL, index, &device, EDD_GET_DEVICE_INTERFACE_NAME))
+            break;
+
+        DEVMODEW devmode = { 0 };
+        devmode.dmSize = sizeof(DEVMODEW);
+        // for (int modes = 0;; modes++) {
+        if (!EnumDisplaySettingsW(device.DeviceName, ENUM_CURRENT_SETTINGS, &devmode))
+            continue;
+        //}
+        devmode = devmode;
+        DisplaySetting m(device, devmode);
+        settings.push_back(m);
+    }
+
+    return settings;
+}
+
+
+bool getMaxResolutionInSystem(int32_t *cx, int32_t *cy)
+{
+    std::vector<DisplaySetting> setting = _enumDisplaySetting();
+    int32_t maxWidth = 0;
+    int32_t maxHeight = 0;
+
+    if (setting.size()) {
+        for (auto &s : setting) {
+            CRect rect(s.rect());
+            if (maxWidth < rect.Width()) {
+                maxWidth = rect.Width();
+            }
+            if (maxHeight < rect.Height()) {
+                maxHeight = rect.Height();
+            }
+        }
+    }
+    else {
+        maxWidth = 1920;
+        maxHeight = 1080;
+    }
+
+    *cx = maxWidth;
+    *cy = maxHeight;
+
+    return true;
+}
+
+DisplaySetting enumDisplaySettingByName(std::wstring &name)
+{
+    DISPLAY_DEVICEW device = { 0 };
+    device.cb = sizeof(DISPLAY_DEVICEW);
+
+    for (int index = 0;; index++) {
+        if (!EnumDisplayDevicesW(NULL, index, &device, EDD_GET_DEVICE_INTERFACE_NAME))
+            break;
+
+        DEVMODEW devmode = { 0 };
+        devmode.dmSize = sizeof(DEVMODEW);
+        // for (int modes = 0;; modes++) {
+        if (!EnumDisplaySettingsW(device.DeviceName, ENUM_CURRENT_SETTINGS, &devmode))
+            continue;
+
+        if (device.DeviceName == name) {
+            DisplaySetting m(device, devmode);
+            return m;
+        }
+    }
+
+    return nullptr;
 }
 
 };
