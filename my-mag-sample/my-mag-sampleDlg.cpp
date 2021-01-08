@@ -214,17 +214,31 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
 
     if (TIMER_WINDOW_CAPTURE == nIDEvent) {
         RECT wRect;
-        if (S_OK != DwmGetWindowAttribute(capturer.winID, DWMWA_EXTENDED_FRAME_BOUNDS, &wRect, sizeof(RECT))) {
-            ::GetWindowRect(capturer.winID, &wRect);
+        HWND &hWnd = capturer.winID;
+        if (S_OK != DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &wRect, sizeof(RECT))) {
+            ::GetWindowRect(hWnd, &wRect);
         }
+
+#if 0
+        HMONITOR hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+        MONITORINFO minfo;
+        minfo.cbSize = sizeof(MONITORINFO);
+        GetMonitorInfo(hMonitor, &minfo);
+
         UINT wndDpi;
         CapUtility::getDPIForWindow(capturer.winID, &wndDpi);
-   
-        capturer.rect = DesktopRect::MakeRECT(wRect, wndDpi*1.0f/CapUtility::kDesktopCaptureDefaultDPI);
+        double scale = CapUtility::kDesktopCaptureDefaultDPI * 1.0f / wndDpi;
+        capturer.rect = DesktopRect::MakeRECT(wRect);
+        DesktopRect mRect = DesktopRect::MakeRECT(minfo.rcMonitor);
+        if (capturer.rect.width() > mRect.width())
+            capturer.rect.IntersectWith(mRect);
+#else
+        capturer.rect = DesktopRect::MakeRECT(wRect);
+#endif
 
-        std::vector<HWND> wndList = CapUtility::getWindowsCovered(capturer.winID);
+        std::vector<HWND> wndList = CapUtility::getWindowsCovered(hWnd);
 
-        if (IsWindow(capturer.winID) && !::IsIconic(capturer.winID) && ::IsWindowVisible(capturer.winID)) {
+        if (CapUtility::isWndCanCap(hWnd)) {
             DesktopRect rect = capturer.rect;
             if (capturer.capturer.get()) {
                 capturer.capturer->setExcludeWindows(wndList);

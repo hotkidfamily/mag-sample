@@ -29,7 +29,7 @@ public:
     bool setExcludeWindows(std::vector<HWND> hWnd);
 
 protected:
-    bool initMagnifier(DesktopRect &);
+    bool initMagnifier();
     bool destoryMagnifier();
     bool loadMagnificationAPI();
 

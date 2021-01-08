@@ -87,21 +87,20 @@ public:
         return MakeXYWH(origin.x(), origin.y(), size.width(), size.height());
     }
 
-    #if _WIN32
+#if _WIN32
     static DesktopRect MakeRECT(RECT rect)
     {
         return DesktopRect(rect.left, rect.top, rect.right, rect.bottom);
     }
 
-    static DesktopRect MakeRECT(RECT rect, double dpi)
+    static DesktopRect MakeRECT(RECT iRect, double dpi)
     {
-        rect.left = (LONG)(rect.left);
-        rect.top = (LONG)(rect.top);
-        rect.right = (LONG)(rect.right / dpi);
-        rect.bottom = (LONG)(rect.bottom / dpi);
-        return DesktopRect(rect.left, rect.top, rect.right, rect.bottom);
+        DesktopRect rect = MakeRECT(iRect);
+        rect.set_width((int32_t)(rect.width() / dpi));
+        rect.set_height((int32_t)(rect.height() / dpi));
+        return rect;
     }
-    #endif
+#endif
 
     DesktopRect() : left_(0), top_(0), right_(0), bottom_(0) {}
 
