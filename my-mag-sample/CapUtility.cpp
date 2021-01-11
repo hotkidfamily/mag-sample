@@ -165,12 +165,12 @@ std::vector<DisplaySetting> _enumDisplaySetting()
 
 bool getMaxResolutionInSystem(int32_t *cx, int32_t *cy)
 {
-    std::vector<DisplaySetting> setting = _enumDisplaySetting();
+    std::vector<DisplaySetting> settings = _enumDisplaySetting();
     int32_t maxWidth = 0;
     int32_t maxHeight = 0;
 
-    if (setting.size()) {
-        for (auto &s : setting) {
+    if (settings.size()) {
+        for (auto &s : settings) {
             CRect rect(s.rect());
             if (maxWidth < rect.Width()) {
                 maxWidth = rect.Width();
@@ -193,26 +193,27 @@ bool getMaxResolutionInSystem(int32_t *cx, int32_t *cy)
 
 DisplaySetting enumDisplaySettingByName(std::wstring &name)
 {
-    DISPLAY_DEVICEW device = { 0 };
-    device.cb = sizeof(DISPLAY_DEVICEW);
+    std::vector<DisplaySetting> settings = _enumDisplaySetting();
 
-    for (int index = 0;; index++) {
-        if (!EnumDisplayDevicesW(NULL, index, &device, EDD_GET_DEVICE_INTERFACE_NAME))
-            break;
-
-        DEVMODEW devmode = { 0 };
-        devmode.dmSize = sizeof(DEVMODEW);
-        // for (int modes = 0;; modes++) {
-        if (!EnumDisplaySettingsW(device.DeviceName, ENUM_CURRENT_SETTINGS, &devmode))
-            continue;
-
-        if (device.DeviceName == name) {
-            DisplaySetting m(device, devmode);
+    for (auto &set : settings) 
+    {
+        if (set.name() == name) {
+            DisplaySetting m = set;
             return m;
         }
     }
 
     return nullptr;
+}
+
+DisplaySetting enumDisplaySettingByMonitor(HMONITOR hMonitor)
+{
+    MONITORINFOEXW minfo;
+    minfo.cbSize = sizeof(MONITORINFOEXW);
+    GetMonitorInfo(hMonitor, &minfo);
+    std::wstring str(minfo.szDevice);
+    CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByName(str);
+    return settings;
 }
 
 };

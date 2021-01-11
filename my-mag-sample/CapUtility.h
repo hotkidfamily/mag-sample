@@ -25,6 +25,11 @@ struct DisplaySetting
         return rt;
     }
 
+    std::wstring name() const noexcept
+    {
+        return _device.DeviceName;
+    }
+
   private:
     DISPLAY_DEVICEW _device;
     DEVMODEW _mode;
@@ -38,5 +43,6 @@ BOOL getDPIForWindow(HWND hwnd, UINT *DPI);
 BOOL isWndCanCap(HWND hWnd);
 
 DisplaySetting enumDisplaySettingByName(std::wstring &name);
+DisplaySetting enumDisplaySettingByMonitor(HMONITOR hMonitor);
 bool getMaxResolutionInSystem(int32_t *cx, int32_t *cy);
 };
