@@ -29,7 +29,7 @@ public:
     bool setExcludeWindows(std::vector<HWND> hWnd);
 
 protected:
-    bool initMagnifier();
+    bool initMagnifier(DesktopRect &rect);
     bool destoryMagnifier();
     bool loadMagnificationAPI();
 
@@ -46,7 +46,6 @@ private:
     std::unique_ptr<MagInterface> _api = nullptr;
     std::unique_ptr<VideoFrame> _frames;
     DesktopRect _lastRect;
-    DesktopRect _memoryRect;
     int _offset = 0;
 
     HMODULE _hMagModule = nullptr;

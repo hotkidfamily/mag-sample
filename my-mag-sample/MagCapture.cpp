@@ -69,7 +69,7 @@ bool MagCapture::loadMagnificationAPI()
 }
 
 
-bool MagCapture::initMagnifier()
+bool MagCapture::initMagnifier(DesktopRect &rect)
 {
     if (!loadMagnificationAPI()) {
         return false;
@@ -79,9 +79,6 @@ bool MagCapture::initMagnifier()
     int32_t maxHeight = 0;
 
     CapUtility::getMaxResolutionInSystem(&maxWidth, &maxHeight);
-    _memoryRect = DesktopRect::MakeLTRB(0, 0, maxWidth, maxHeight);
-
-    DesktopRect &rect = _memoryRect;
 
     BOOL result = _api->Initialize();
     if (!result) {
@@ -99,7 +96,7 @@ bool MagCapture::initMagnifier()
     }
 
     // Register the host window class. See the MSDN documentation of the
-    // Magnification API for more infomation.
+    // Magnification API for more information.
     WNDCLASSEXW wcex = {};
     wcex.cbSize = sizeof(WNDCLASSEX);
     wcex.lpfnWndProc = &DefWindowProc;
@@ -111,8 +108,8 @@ bool MagCapture::initMagnifier()
     RegisterClassExW(&wcex);
 
     // Create the host window.
-    _hostWnd = CreateWindowExW(WS_EX_LAYERED, kMagnifierHostClass, kHostWindowName, 0, 0, 0, rect.width(),
-                               rect.height(), nullptr, nullptr, hInstance, nullptr);
+    _hostWnd = CreateWindowExW(WS_EX_LAYERED, kMagnifierHostClass, kHostWindowName, 0, 0, 0, 0,
+                               0, nullptr, nullptr, hInstance, nullptr);
     if (!_hostWnd) {
         _api->Uninitialize();
         return false;
@@ -187,7 +184,7 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
     {
         return false;
     }
-    if (_offset != 0 && (_offset != header.offset)) {
+    if (header.offset > 32) {
         return false;
     }
 
@@ -290,7 +287,11 @@ bool MagCapture::startCaptureWindow(HWND hWnd)
 {
     bool ret = false;
 
-    initMagnifier();
+    HMONITOR hm = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+    CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(hm);
+    DesktopRect rect = DesktopRect::MakeRECT(settings.rect());
+
+    initMagnifier(rect);
 
     return ret;
 }
@@ -299,8 +300,9 @@ bool MagCapture::startCaptureWindow(HWND hWnd)
 bool MagCapture::startCaptureScreen(HMONITOR hMonitor)
 {
     bool ret = false;
-
-    initMagnifier();
+    CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(hMonitor);
+    DesktopRect rect = DesktopRect::MakeRECT(settings.rect());
+    initMagnifier(rect);
 
     return ret;
 }
