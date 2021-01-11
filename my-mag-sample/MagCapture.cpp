@@ -5,6 +5,7 @@
 #include "MagCapture.h"
 
 #include "CapUtility.h"
+#include "logger.h"
 
 
 static wchar_t kMagnifierHostClass[] = L"ScreenCapturerWinMagnifierHost";
@@ -181,9 +182,16 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
     int height = _lastRect.height();
     int stride = width * 4;
 
-    if (header.stride < stride) {
+
+    if ( header.stride < stride )
+    {
         return false;
     }
+    if (_offset != 0 && (_offset != header.offset)) {
+        return false;
+    }
+
+    logger::log(LogLevel::Info, " %dx%d,%d, %d, %d", header.width, header.height, header.offset, header.stride, header.cbSize);
 
     int bpp = header.cbSize / header.width / header.height; // bpp should be 4
     if (!_frames.get() || header.format != GUID_WICPixelFormat32bppRGBA 
@@ -202,6 +210,8 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
             pDst += stride;
             pSrc += header.stride;
         }
+
+        _offset = header.offset;
     }
 
     {
@@ -244,6 +254,7 @@ bool MagCapture::captureImage(const DesktopRect& capRect)
         }
     } __except (EXCEPTION_EXECUTE_HANDLER) {
         bRet = false;
+        logger::log(LogLevel::Info, "exception");
     }
 
     return bRet;

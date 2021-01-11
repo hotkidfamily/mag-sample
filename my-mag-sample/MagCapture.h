@@ -47,6 +47,7 @@ private:
     std::unique_ptr<VideoFrame> _frames;
     DesktopRect _lastRect;
     DesktopRect _memoryRect;
+    int _offset = 0;
 
     HMODULE _hMagModule = nullptr;
 

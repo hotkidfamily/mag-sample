@@ -219,11 +219,7 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
         }
 
         HMONITOR hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
-        MONITORINFOEXW minfo;
-        minfo.cbSize = sizeof(MONITORINFOEXW);
-        GetMonitorInfo(hMonitor, &minfo);
-        std::wstring str(minfo.szDevice);
-        CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByName(str);
+        CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(hMonitor);
         DesktopRect monitorRect = DesktopRect::MakeRECT(settings.rect());
 
         capturer.rect = DesktopRect::MakeRECT(wRect);
@@ -285,7 +281,7 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
         capturer.winID = _wndList.at(_wndListCombobox.GetCurSel()).Hwnd();
     }
     catch (std::out_of_range &e) {
-        capturer.winID = 0;
+        return;
     }
     capturer.screenID = nullptr;
     capturer.capturer.reset(new MagCapture());
@@ -320,15 +316,8 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     capture.capturer->setCallback(CaptureCallback, this);
     capture.capturer->startCaptureScreen(capture.screenID);
 
-    MONITORINFO mi;
-    memset(&mi, 0, sizeof(MONITORINFO));
-    mi.cbSize = sizeof(MONITORINFO);
-    BOOL bSuccess = GetMonitorInfoA(capture.screenID, &mi);
-    if (bSuccess) {
-        capture.rect = DesktopRect::MakeLTRB(mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right, mi.rcMonitor.bottom);
-    }
-    
-
+    CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(capture.screenID);
+    capture.rect = DesktopRect::MakeRECT(settings.rect());
     if (render.render) {
         render.render.reset(nullptr);
     }
