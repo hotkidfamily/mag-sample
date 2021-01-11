@@ -121,6 +121,10 @@ BOOL CmymagsampleDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
+    DWORD pid = GetCurrentProcessId();
+
+    std::wstring title = L"my-mag-sample - " + std::to_wstring(pid);
+    SetWindowTextW(title.c_str());
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
