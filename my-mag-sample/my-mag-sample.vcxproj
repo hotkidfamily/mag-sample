@@ -210,6 +210,7 @@
     <ClInclude Include="CapUtility.h" />
     <ClInclude Include="d3drender.h" />
     <ClInclude Include="DesktopRect.h" />
+    <ClInclude Include="logger.h" />
     <ClInclude Include="MagCapture.h" />
     <ClInclude Include="my-mag-sample.h" />
     <ClInclude Include="my-mag-sampleDlg.h" />
@@ -223,6 +224,7 @@
   <ItemGroup>
     <ClCompile Include="CapUtility.cpp" />
     <ClCompile Include="d3drender.cpp" />
+    <ClCompile Include="logger.cpp" />
     <ClCompile Include="MagCapture.cpp" />
     <ClCompile Include="my-mag-sample.cpp" />
     <ClCompile Include="my-mag-sampleDlg.cpp" />
