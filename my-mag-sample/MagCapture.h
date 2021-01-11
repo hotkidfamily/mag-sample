@@ -46,7 +46,6 @@ private:
     std::unique_ptr<MagInterface> _api = nullptr;
     std::unique_ptr<VideoFrame> _frames;
     DesktopRect _lastRect;
-    int _offset = 0;
 
     HMODULE _hMagModule = nullptr;
 

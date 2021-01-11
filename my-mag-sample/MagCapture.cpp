@@ -10,7 +10,7 @@
 
 static wchar_t kMagnifierHostClass[] = L"HT-CapHostClass";
 static wchar_t kHostWindowName[] = L"HT-CapHostWindow";
-static wchar_t kMagnifierWindowClass[] = L"Magnifier";
+static wchar_t kMagnifierWindowClass[] = L"Magnifier"; // must be WC_MAGNIFIER
 static wchar_t kMagnifierWindowName[] = L"HT-CapChildWindow";
 
 DWORD GetTlsIndex()
@@ -103,7 +103,7 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
     RegisterClassExW(&wcex);
 
     // Create the host window.
-    _hostWnd = CreateWindowExW(WS_EX_LAYERED, kMagnifierHostClass, kHostWindowName, 0, 0, 0, 0,
+    _hostWnd = CreateWindowExW(WS_EX_LAYERED | WS_EX_TOPMOST, kMagnifierHostClass, kHostWindowName, 0, 0, 0, 0,
                                0, nullptr, nullptr, hInstance, nullptr);
     if (!_hostWnd) {
         _api->Uninitialize();
@@ -204,8 +204,6 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
             pDst += stride;
             pSrc += header.stride;
         }
-
-        _offset = header.offset;
     }
 
     {
