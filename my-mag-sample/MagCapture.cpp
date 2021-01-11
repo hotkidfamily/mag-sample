@@ -8,10 +8,10 @@
 #include "logger.h"
 
 
-static wchar_t kMagnifierHostClass[] = L"ScreenCapturerWinMagnifierHost";
-static wchar_t kHostWindowName[] = L"MagnifierHost";
+static wchar_t kMagnifierHostClass[] = L"HT-CapHostClass";
+static wchar_t kHostWindowName[] = L"HT-CapHostWindow";
 static wchar_t kMagnifierWindowClass[] = L"Magnifier";
-static wchar_t kMagnifierWindowName[] = L"MagnifierWindow";
+static wchar_t kMagnifierWindowName[] = L"HT-CapChildWindow";
 
 DWORD GetTlsIndex()
 {
@@ -75,11 +75,6 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
         return false;
     }
 
-    int32_t maxWidth = 0;
-    int32_t maxHeight = 0;
-
-    CapUtility::getMaxResolutionInSystem(&maxWidth, &maxHeight);
-
     BOOL result = _api->Initialize();
     if (!result) {
         return false;
@@ -116,8 +111,10 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
     }
 
     // Create the magnifier control.
-    _magWnd = CreateWindowW(kMagnifierWindowClass, kMagnifierWindowName, WS_CHILD | WS_VISIBLE, 
-                            0, 0, rect.width(), rect.height(), _hostWnd, nullptr, hInstance, nullptr);
+    _magWnd
+        = CreateWindowW(kMagnifierWindowClass, kMagnifierWindowName, WS_CHILD | MS_SHOWMAGNIFIEDCURSOR | WS_VISIBLE, 
+                            rect.left(), rect.top(), rect.width(),
+                            rect.height(), _hostWnd, nullptr, hInstance, nullptr);
     if (!_magWnd) {
         _api->Uninitialize();
         return false;
