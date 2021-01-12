@@ -101,10 +101,7 @@ std::vector<HWND> getWindowsCovered(HWND hTartgetWnd)
         int style = GetWindowLong(enumWnd, GWL_STYLE);
         int exStyle = GetWindowLong(enumWnd, GWL_EXSTYLE);
 
-        if (isWndCanCap(enumWnd)
-            //            && !(exStyle & WS_EX_NOACTIVATE) // 需要获取焦点的窗口(输入法窗口)
-            || ((exStyle & WS_EX_TOOLWINDOW) && (exStyle & WS_EX_NOACTIVATE))
-            )
+        if (isWndCanCap(enumWnd))
         {
             HWND rootWnd = enumWnd;
 
@@ -119,9 +116,11 @@ std::vector<HWND> getWindowsCovered(HWND hTartgetWnd)
 
             RECT rcWnd;
             GetWindowRect(rootWnd, &rcWnd);
-            if (!((rcWnd.right < rcTarget.left) || (rcWnd.left > rcTarget.right) || (rcWnd.bottom < rcTarget.top)
-                  || (rcWnd.top > rcTarget.bottom))) {
-                wndlist.insert(rootWnd);
+            if (!IsRectEmpty(&rcWnd)) {
+                if (!((rcWnd.right < rcTarget.left) || (rcWnd.left > rcTarget.right) || (rcWnd.bottom < rcTarget.top)
+                      || (rcWnd.top > rcTarget.bottom))) {
+                    wndlist.insert(rootWnd);
+                }
             }
         }
     }
