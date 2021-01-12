@@ -109,11 +109,12 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
 
         // Create the host window.
         _hostWnd = CreateWindowExW(WS_EX_LAYERED, kMagnifierHostClass, kHostWindowName, WS_CLIPCHILDREN | WS_POPUP,
-                                   rect.left(), rect.top(), rect.width(), rect.height(), nullptr, nullptr, hInstance,
-                                   nullptr);
+                                   0, 0, 0, 0, nullptr, nullptr, hInstance, nullptr);
         if (!_hostWnd) {
             break;
         }
+
+        SetLayeredWindowAttributes(_hostWnd, 0, 255, LWA_ALPHA);
 
         // Create the magnifier control.
         _magWnd = CreateWindowExW(0, kMagnifierWindowClass, kMagnifierWindowName, WS_CHILD | MS_SHOWMAGNIFIEDCURSOR, 0,
@@ -121,15 +122,6 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
         if (!_magWnd) {
             break;
         }
-
-        //     MAGCOLOREFFECT transform = { { // MagEffectGrayscale
-        //                                    { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f },
-        //                                    { 0.0f, 1.0f, 0.0f, 0.0f, 0.0f },
-        //                                    { 0.0f, 0.0f, 1.0f, 0.0f, 0.0f },
-        //                                    { 0.0f, 0.0f, 0.0f, 1.0f, 0.0f },
-        //                                    { 0.004f, 0.0f, 0.0f, 0.0f, 1.0f } } };
-        //
-        //     _api->SetColorEffect(_magWnd, &transform);
 
         // Hide the host window.
         ShowWindow(_hostWnd, SW_HIDE);
