@@ -182,12 +182,13 @@ BOOL WINAPI MagCapture::OnMagImageScalingCallback(HWND hwnd,
     RECT clipped,
     HRGN dirty)
 {
+    BOOL bRet = FALSE;
     MagCapture *owner = reinterpret_cast<MagCapture *>(TlsGetValue(GetTlsIndex()));
     
     if (owner)
-        owner->onCaptured(srcdata, srcheader);
+        bRet = owner->onCaptured(srcdata, srcheader);
 
-    return TRUE;
+    return bRet;
 }
 
 bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
@@ -264,7 +265,7 @@ bool MagCapture::captureImage(const DesktopRect& capRect)
 
             // OnCaptured will be called via OnMagImageScalingCallback and fill in the
             // frame before set_window_source_func_ returns.
-            bRet = _api->SetWindowSource(_magWnd, wRect);
+            bRet = _api->SetWindowSource(_magWnd, wRect) == TRUE;
         }
     } __except (EXCEPTION_EXECUTE_HANDLER) {
         bRet = false;
