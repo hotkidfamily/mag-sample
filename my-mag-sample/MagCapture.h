@@ -46,12 +46,13 @@ private:
     std::unique_ptr<MagInterface> _api = nullptr;
     std::unique_ptr<VideoFrame> _frames;
     DesktopRect _lastRect;
+    int32_t _offset = -1;
 
     HMODULE _hMagModule = nullptr;
+    HINSTANCE _hMagInstance = nullptr;
 
     HWND _hostWnd = nullptr;
     HWND _magWnd = nullptr;
-    bool _bMagInit = false;
 
     std::recursive_mutex _cbMutex;
     funcCaptureCallback _callback = nullptr;

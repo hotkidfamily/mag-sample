@@ -28,6 +28,7 @@ MagCapture::MagCapture()
 
 MagCapture::~MagCapture()
 {
+    stop();
 }
 
 bool MagCapture::loadMagnificationAPI()
@@ -54,6 +55,8 @@ bool MagCapture::loadMagnificationAPI()
             GetProcAddress(_hMagModule, "MagGetWindowSource"));
         _api->SetImageScalingCallback = reinterpret_cast<fnMagSetImageScalingCallback>(
             GetProcAddress(_hMagModule, "MagSetImageScalingCallback"));
+        _api->SetColorEffect = reinterpret_cast<fnMagSetColorEffect>(
+            GetProcAddress(_hMagModule, "MagSetColorEffect"));
     }
 
     ret = !(!_hMagModule
@@ -71,79 +74,96 @@ bool MagCapture::loadMagnificationAPI()
 
 bool MagCapture::initMagnifier(DesktopRect &rect)
 {
-    if (!loadMagnificationAPI()) {
-        return false;
-    }
-
-    BOOL result = _api->Initialize();
-    if (!result) {
-        return false;
-    }
-
+    BOOL result = FALSE;
     HMODULE hInstance = nullptr;
-    result =
-        GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-            reinterpret_cast<char*>(&DefWindowProc), &hInstance);
+
+    do 
+    {
+        if (!loadMagnificationAPI()) {
+            break;
+        }
+
+        result = _api->Initialize();
+        if (!result) {
+            break;
+        }
+
+        result
+            = GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                                 reinterpret_cast<char *>(&DefWindowProc), &hInstance);
+        if (!result) {
+            break;
+        }
+
+        // Register the host window class. See the MSDN documentation of the
+        // Magnification API for more information.
+        WNDCLASSEXW wcex = {};
+        wcex.cbSize = sizeof(WNDCLASSEX);
+        wcex.lpfnWndProc = &DefWindowProc;
+        wcex.hInstance = hInstance;
+        wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+        wcex.lpszClassName = kMagnifierHostClass;
+
+        // Ignore the error which may happen when the class is already registered.
+        RegisterClassExW(&wcex);
+
+        // Create the host window.
+        _hostWnd = CreateWindowExW(WS_EX_LAYERED, kMagnifierHostClass, kHostWindowName, WS_CLIPCHILDREN | WS_POPUP,
+                                   rect.left(), rect.top(), rect.width(), rect.height(), nullptr, nullptr, hInstance,
+                                   nullptr);
+        if (!_hostWnd) {
+            break;
+        }
+
+        // Create the magnifier control.
+        _magWnd = CreateWindowExW(0, kMagnifierWindowClass, kMagnifierWindowName, WS_CHILD | MS_SHOWMAGNIFIEDCURSOR, 0,
+                                  0, rect.width(), rect.height(), _hostWnd, nullptr, hInstance, nullptr);
+        if (!_magWnd) {
+            break;
+        }
+
+        //     MAGCOLOREFFECT transform = { { // MagEffectGrayscale
+        //                                    { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f },
+        //                                    { 0.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+        //                                    { 0.0f, 0.0f, 1.0f, 0.0f, 0.0f },
+        //                                    { 0.0f, 0.0f, 0.0f, 1.0f, 0.0f },
+        //                                    { 0.004f, 0.0f, 0.0f, 0.0f, 1.0f } } };
+        //
+        //     _api->SetColorEffect(_magWnd, &transform);
+
+        // Hide the host window.
+        ShowWindow(_hostWnd, SW_HIDE);
+
+        // Set the scaling callback to receive captured image.
+        result = _api->SetImageScalingCallback(_magWnd, &MagCapture::OnMagImageScalingCallback);
+        if (!result) {
+            break;
+        }
+    } while (0);
+    
     if (!result) {
-        _api->Uninitialize();
-        return false;
+        destoryMagnifier();
+    }
+    else {
+        _hMagInstance = hInstance;
     }
 
-    // Register the host window class. See the MSDN documentation of the
-    // Magnification API for more information.
-    WNDCLASSEXW wcex = {};
-    wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.lpfnWndProc = &DefWindowProc;
-    wcex.hInstance = hInstance;
-    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wcex.lpszClassName = kMagnifierHostClass;
-
-    // Ignore the error which may happen when the class is already registered.
-    RegisterClassExW(&wcex);
-
-    // Create the host window.
-    _hostWnd = CreateWindowExW(WS_EX_LAYERED | WS_EX_TOPMOST, kMagnifierHostClass, kHostWindowName, 0, 0, 0, 0,
-                               0, nullptr, nullptr, hInstance, nullptr);
-    if (!_hostWnd) {
-        _api->Uninitialize();
-        return false;
-    }
-
-    // Create the magnifier control.
-    _magWnd
-        = CreateWindowW(kMagnifierWindowClass, kMagnifierWindowName, WS_CHILD | MS_SHOWMAGNIFIEDCURSOR | WS_VISIBLE, 
-                            rect.left(), rect.top(), rect.width(),
-                            rect.height(), _hostWnd, nullptr, hInstance, nullptr);
-    if (!_magWnd) {
-        _api->Uninitialize();
-        return false;
-    }
-
-    // Hide the host window.
-    ShowWindow(_hostWnd, SW_HIDE);
-
-    // Set the scaling callback to receive captured image.
-    result = _api->SetImageScalingCallback(
-        _magWnd,
-        &MagCapture::OnMagImageScalingCallback);
-    if (!result) {
-        _api->Uninitialize();
-        return false;
-    }
-
-    _bMagInit = true;
-    return true;
+    return result;
 }
 
 bool MagCapture::destoryMagnifier()
 {
     bool ret = false;
 
-    if (_hostWnd)
+    if (_hostWnd) {
         DestroyWindow(_hostWnd);
+        UnregisterClassW(kMagnifierHostClass, _hMagInstance);
+    }
 
-     if (_api->Uninitialize)
+    _magWnd = nullptr;
+    _hostWnd = nullptr;
+
+    if (_api->Uninitialize)
         _api->Uninitialize();
 
     if (_hMagModule)
@@ -175,13 +195,13 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
     int width = _lastRect.width();
     int height = _lastRect.height();
     int stride = width * 4;
-
+    auto &inStride = header.stride;
 
     if ( header.stride < stride )
     {
         return false;
     }
-    if (header.offset > 32) {
+    if (_offset != -1 && header.offset != _offset) {
         return false;
     }
 
@@ -202,7 +222,7 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
         for (int i = 0; i < height; i++) {
             memcpy(pDst, pSrc, stride);
             pDst += stride;
-            pSrc += header.stride;
+            pSrc += inStride;
         }
     }
 
@@ -213,6 +233,8 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
             _callback(_frames.get(), _callbackargs);
         }
     }
+
+    _offset = header.offset;
 
     return true;
 }
@@ -257,9 +279,6 @@ bool MagCapture::setExcludeWindows(HWND hWnd)
 {
     bool ret = false;
 
-    if (_bMagInit) {
-    }
-
     _api->SetWindowFilterList(_magWnd, MW_FILTERMODE_EXCLUDE, 1, &hWnd);
 
     return ret;
@@ -269,10 +288,7 @@ bool MagCapture::setExcludeWindows(std::vector<HWND> hWnd)
 {
     bool ret = false;
 
-    if (_bMagInit) {
-    }
-
-    _api->SetWindowFilterList(_magWnd, MW_FILTERMODE_EXCLUDE, hWnd.size(), hWnd.data());
+    ret = _api->SetWindowFilterList(_magWnd, MW_FILTERMODE_EXCLUDE, hWnd.size(), hWnd.data()) == TRUE;
 
     return ret;
 }
@@ -297,6 +313,7 @@ bool MagCapture::startCaptureScreen(HMONITOR hMonitor)
     bool ret = false;
     CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(hMonitor);
     DesktopRect rect = DesktopRect::MakeRECT(settings.rect());
+
     initMagnifier(rect);
 
     return ret;
@@ -305,6 +322,8 @@ bool MagCapture::startCaptureScreen(HMONITOR hMonitor)
 bool MagCapture::stop()
 {
     bool ret = false;
+
+    destoryMagnifier();
 
     return ret;
 }

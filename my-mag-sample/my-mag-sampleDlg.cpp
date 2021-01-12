@@ -314,14 +314,14 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     OnBnClickedBtnStop();
 
     capture.screenID = MonitorFromWindow(GetSafeHwnd(), MONITOR_DEFAULTTONEAREST);
+    CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(capture.screenID);
+    capture.rect = DesktopRect::MakeRECT(settings.rect());
 
     capture.winID = 0;
     capture.capturer.reset(new MagCapture());
     capture.capturer->setCallback(CaptureCallback, this);
     capture.capturer->startCaptureScreen(capture.screenID);
 
-    CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(capture.screenID);
-    capture.rect = DesktopRect::MakeRECT(settings.rect());
     if (render.render) {
         render.render.reset(nullptr);
     }
