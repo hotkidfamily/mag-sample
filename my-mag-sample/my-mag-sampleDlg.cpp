@@ -85,6 +85,7 @@ BEGIN_MESSAGE_MAP(CmymagsampleDlg, CDialogEx)
     ON_BN_CLICKED(IDC_BTN_SCREENCAP, &CmymagsampleDlg::OnBnClickedBtnScreencap)
     ON_BN_CLICKED(IDC_BTN_STOP, &CmymagsampleDlg::OnBnClickedBtnStop)
     ON_MESSAGE(WM_DISPLAYCHANGE, &CmymagsampleDlg::OnDisplayChanged)
+    ON_MESSAGE(WM_DPICHANGED, &CmymagsampleDlg::OnDPIChanged)
     //ON_MESSAGE(WM_SESSIONCHANGE, &CmymagsampleDlg::OnDisplayChanged)
     END_MESSAGE_MAP()
 
@@ -189,6 +190,17 @@ void CaptureCallback(VideoFrame *frame, void *args)
 {
     CmymagsampleDlg *pDlg = reinterpret_cast<CmymagsampleDlg *>(args);
     pDlg->OnCaptureFrame(frame);
+}
+
+LRESULT CmymagsampleDlg::OnDPIChanged(WPARAM wParam, LPARAM lParam)
+{
+    auto &capturer = _appContext->capturer;
+
+    long dpi = LOWORD(wParam);
+    RECT newRect = *(reinterpret_cast<const RECT *>(lParam));
+    //this->OnVisualEnvironmentChange();
+
+    return 0;
 }
 
 LRESULT CmymagsampleDlg::OnDisplayChanged(WPARAM wParam, LPARAM lParam)
@@ -341,13 +353,13 @@ void CmymagsampleDlg::OnBnClickedBtnStop()
     auto &capture = _appContext->capturer;
     auto &render = _appContext->render;
 
-    if (capture.capturer.get())
-        capture.capturer.reset(nullptr);
-
     if (timer.timerInst) {
         KillTimer(timer.timerID);
         timer.timerInst = 0;
     }
+
+    if (capture.capturer.get())
+        capture.capturer.reset(nullptr);
 
     if (render.render) {
         render.render.reset(nullptr);

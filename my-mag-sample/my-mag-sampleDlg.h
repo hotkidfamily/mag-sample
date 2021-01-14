@@ -40,7 +40,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
     afx_msg LRESULT OnDisplayChanged(WPARAM wParam, LPARAM lParam);
-
+    afx_msg LRESULT OnDPIChanged(WPARAM wParam, LPARAM lParam);
 
 private:
     std::unique_ptr<AppContext> _appContext;

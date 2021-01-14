@@ -22,13 +22,18 @@ DWORD GetTlsIndex()
 
 MagCapture::MagCapture()
 {
-
+    loadMagnificationAPI();
 }
 
 
 MagCapture::~MagCapture()
 {
     stop();
+
+    _api.reset(nullptr);
+
+    if (_hMagModule)
+        FreeLibrary(_hMagModule);
 }
 
 bool MagCapture::loadMagnificationAPI()
@@ -77,19 +82,16 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
     BOOL result = FALSE;
     HMODULE hInstance = nullptr;
 
+
     do 
     {
-        if (!loadMagnificationAPI()) {
-            break;
-        }
-
         result = _api->Initialize();
         if (!result) {
             break;
         }
 
-        result
-            = GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+        result = 
+            GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
                                  reinterpret_cast<char *>(&DefWindowProc), &hInstance);
         if (!result) {
             break;
@@ -103,13 +105,17 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
         wcex.hInstance = hInstance;
         wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
         wcex.lpszClassName = kMagnifierHostClass;
+        wcex.style = CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS;
 
         // Ignore the error which may happen when the class is already registered.
         RegisterClassExW(&wcex);
 
         // Create the host window.
-        _hostWnd = CreateWindowExW(WS_EX_LAYERED, kMagnifierHostClass, kHostWindowName, WS_CLIPCHILDREN | WS_POPUP,
-                                   0, 0, 0, 0, nullptr, nullptr, hInstance, nullptr);
+        _hostWnd = CreateWindowExW(WS_EX_TOPMOST |WS_EX_LAYERED, kMagnifierHostClass, kHostWindowName,
+                                   WS_CLIPCHILDREN | WS_POPUP | WS_EX_TRANSPARENT | // Click-through
+                                       WS_EX_TOOLWINDOW,                            // Do not show program on taskbar,
+                                   0, 0, 0, 0, nullptr, nullptr, hInstance,
+                                   nullptr);
         if (!_hostWnd) {
             break;
         }
@@ -148,7 +154,8 @@ bool MagCapture::destoryMagnifier()
     bool ret = false;
 
     if (_hostWnd) {
-        DestroyWindow(_hostWnd);
+        ::SendMessageW(_hostWnd, WM_CLOSE, 0, 0);
+        ::DestroyWindow(_hostWnd);
         UnregisterClassW(kMagnifierHostClass, _hMagInstance);
     }
 
@@ -157,9 +164,6 @@ bool MagCapture::destoryMagnifier()
 
     if (_api->Uninitialize)
         _api->Uninitialize();
-
-    if (_hMagModule)
-        FreeLibrary(_hMagModule);
 
     return ret;
 }

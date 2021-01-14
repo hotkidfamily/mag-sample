@@ -215,4 +215,74 @@ DisplaySetting enumDisplaySettingByMonitor(HMONITOR hMonitor)
     return settings;
 }
 
+static int(WINAPI *ptrGetSystemMetricsForDpi)(int, UINT) = NULL;
+static UINT(WINAPI *pfnGetDpiForSystem)() = NULL;
+static UINT(WINAPI *pfnGetDpiForWindow)(HWND) = NULL;
+
+UINT GetDPI(HWND hWnd)
+{
+    if (hWnd != NULL) {
+        if (pfnGetDpiForWindow)
+            return pfnGetDpiForWindow(hWnd);
+    }
+    else {
+        if (pfnGetDpiForSystem)
+            return pfnGetDpiForSystem();
+    }
+    if (HDC hDC = GetDC(hWnd)) {
+        auto dpi = GetDeviceCaps(hDC, LOGPIXELSX);
+        ReleaseDC(hWnd, hDC);
+        return dpi;
+    }
+    else
+        return USER_DEFAULT_SCREEN_DPI;
+}
+
+static int metrics[SM_CMETRICS] = { 0 };
+
+template <typename P>
+bool Symbol(HMODULE h, P &pointer, const char *name)
+{
+    if (P p = reinterpret_cast<P>(GetProcAddress(h, name))) {
+        pointer = p;
+        return true;
+    }
+    else
+        return false;
+}
+
+LRESULT UpdateSysmteMetrics(HWND hWnd)
+{
+    HMODULE hUser32 = GetModuleHandle(L"USER32");
+    Symbol(hUser32, pfnGetDpiForSystem, "GetDpiForSystem");
+    Symbol(hUser32, pfnGetDpiForWindow, "GetDpiForWindow");
+    Symbol(hUser32, ptrGetSystemMetricsForDpi, "GetSystemMetricsForDpi");
+
+    long dpi = GetDPI(hWnd);
+    UINT dpiSystem = GetDPI(NULL);
+
+    if (ptrGetSystemMetricsForDpi) {
+        for (auto i = 0; i != sizeof metrics / sizeof metrics[0]; ++i) {
+            metrics[i] = ptrGetSystemMetricsForDpi(i, dpi);
+        }
+    }
+    else {
+        for (auto i = 0; i != sizeof metrics / sizeof metrics[0]; ++i) {
+            metrics[i] = dpi * GetSystemMetrics(i) / dpiSystem;
+        }
+    }
+    return 0;
+}
+
+LRESULT GetVirtualWindowsRect(RECT &rect)
+{
+    UpdateSysmteMetrics(NULL);
+    rect.left = metrics[SM_XVIRTUALSCREEN];
+    rect.top = metrics[SM_YVIRTUALSCREEN];
+    rect.right = metrics[SM_CXVIRTUALSCREEN];
+    rect.bottom = metrics[SM_CYVIRTUALSCREEN];
+
+    return 0;
+}
+
 };
