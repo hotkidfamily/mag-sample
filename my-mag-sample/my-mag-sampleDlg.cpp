@@ -6,6 +6,8 @@
 
 #include "Win32WindowEnumeration.h"
 #include "CapUtility.h"
+#include "MagCapture.h"
+#include "GDICapture.h"
 
 #include "my-mag-sample.h"
 #include "my-mag-sampleDlg.h"
@@ -198,7 +200,6 @@ LRESULT CmymagsampleDlg::OnDPIChanged(WPARAM wParam, LPARAM lParam)
 
     long dpi = LOWORD(wParam);
     RECT newRect = *(reinterpret_cast<const RECT *>(lParam));
-    //this->OnVisualEnvironmentChange();
 
     return 0;
 }

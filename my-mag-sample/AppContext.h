@@ -1,6 +1,7 @@
 #pragma once
 
-#include "MagCapture.h"
+#include "capturer-define.h"
+
 #include "d3drender.h"
 
 #include <vector>
@@ -14,7 +15,7 @@ typedef struct tagAppContext
     }timer;
 
     struct {
-        std::unique_ptr<MagCapture> capturer;
+        std::unique_ptr<CCapture> capturer;
 
         HWND winID;
         HMONITOR screenID;

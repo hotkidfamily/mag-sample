@@ -46,6 +46,6 @@ DisplaySetting enumDisplaySettingByName(std::wstring &name);
 DisplaySetting enumDisplaySettingByMonitor(HMONITOR hMonitor);
 bool getMaxResolutionInSystem(int32_t *cx, int32_t *cy);
 //LRESULT UpdateSysmteMetrics(HWND hWnd);
-LRESULT GetVirtualWindowsRect(RECT &rect);
+LRESULT GetPrimeryWindowsRect(RECT &rect);
 };
     

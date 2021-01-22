@@ -771,7 +771,7 @@ HRESULT d3drender::_drawInfo(HDC hdc, RECT *rc, TCHAR *format, ...)
 
     ::OffsetRect(rc, 0, 2);
 
-    hRet = _printer->DrawTextW(nullptr, buf, -1, rc, DT_LEFT | DT_TOP, 0xff00ff00);
+    hRet = _printer->DrawTextW(nullptr, buf, -1, rc, DT_LEFT | DT_TOP, 0xffffff00);
 
     rc->top += FONT_HEIGHT;
 

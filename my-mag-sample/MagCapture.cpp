@@ -114,7 +114,7 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
         _hostWnd = CreateWindowExW(WS_EX_TOPMOST |WS_EX_LAYERED, kMagnifierHostClass, kHostWindowName,
                                    WS_CLIPCHILDREN | WS_POPUP | WS_EX_TRANSPARENT | // Click-through
                                        WS_EX_TOOLWINDOW,                            // Do not show program on taskbar,
-                                   0, 0, 0, 0, nullptr, nullptr, hInstance,
+                                   rect.left(), rect.top(), rect.width(), rect.height(), nullptr, nullptr, hInstance,
                                    nullptr);
         if (!_hostWnd) {
             break;
@@ -132,11 +132,19 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
         // Hide the host window.
         ShowWindow(_hostWnd, SW_HIDE);
 
+#if USING_GDI_CAPTURE
+
+        _magHDC = GetDC(_magWnd);
+        _compatibleDC = ::CreateCompatibleDC(_magHDC);
+
+#else // USING_GDI_CAPTURE
         // Set the scaling callback to receive captured image.
         result = _api->SetImageScalingCallback(_magWnd, &MagCapture::OnMagImageScalingCallback);
         if (!result) {
             break;
         }
+#endif // USING_GDI_CAPTURE
+
     } while (0);
     
     if (!result) {
@@ -169,23 +177,57 @@ bool MagCapture::destoryMagnifier()
 }
 
 
-BOOL WINAPI MagCapture::OnMagImageScalingCallback(HWND hwnd,
-    void* srcdata,
-    MAGIMAGEHEADER srcheader,
-    void* destdata,
-    MAGIMAGEHEADER destheader,
-    RECT unclipped,
-    RECT clipped,
-    HRGN dirty)
+#if USING_GDI_CAPTURE
+static int ComputePitch(_In_ int nWidth, _In_ int nBPP)
 {
-    BOOL bRet = FALSE;
-    MagCapture *owner = reinterpret_cast<MagCapture *>(TlsGetValue(GetTlsIndex()));
-    
-    if (owner)
-        bRet = owner->onCaptured(srcdata, srcheader);
+    return ((((nWidth * nBPP) + 31) / 32) * 4);
+}
+
+bool MagCapture::onCaptured(void *srcdata, BITMAPINFOHEADER &header)
+{
+    bool bRet = false;
+    int x = abs(_lastRect.left());
+    int y = abs(_lastRect.top());
+    int width = _lastRect.width();
+    int height = _lastRect.height();
+    int stride = ComputePitch(width, 32);
+    auto inStride = ComputePitch(header.biWidth, 32);
+
+    uint8_t *pBits = (uint8_t *)srcdata;
+    if (header.biHeight > 0) {
+        pBits = pBits + (header.biHeight - 1) * inStride;
+        inStride = -inStride;
+    }
+
+    int bpp = header.biBitCount >> 3; // bpp should be 4
+    if (!_frames.get() || width != static_cast<UINT>(_frames->width()) || height != static_cast<UINT>(_frames->height())
+        || stride != static_cast<UINT>(_frames->stride()) || bpp != CapUtility::kDesktopCaptureBPP) {
+        _frames.reset(VideoFrame::MakeFrame(width, height, stride, VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
+    }
+
+    {
+        uint8_t *pDst = reinterpret_cast<uint8_t *>(_frames->data());
+        uint8_t *pSrc = reinterpret_cast<uint8_t *>(pBits) + x * bpp + y * inStride;
+
+        for (int i = 0; i < height; i++) {
+            memcpy(pDst, pSrc, stride);
+            pDst += stride;
+            pSrc += inStride;
+        }
+    }
+
+    {
+        std::lock_guard<decltype(_cbMutex)> guard(_cbMutex);
+
+        if (_callback) {
+            _callback(_frames.get(), _callbackargs);
+        }
+    }
 
     return bRet;
 }
+
+#else
 
 bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
 {
@@ -236,6 +278,26 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
     return true;
 }
 
+BOOL WINAPI MagCapture::OnMagImageScalingCallback(HWND hwnd,
+    void* srcdata,
+    MAGIMAGEHEADER srcheader,
+    void* destdata,
+    MAGIMAGEHEADER destheader,
+    RECT unclipped,
+    RECT clipped,
+    HRGN dirty)
+{
+    BOOL bRet = FALSE;
+    MagCapture *owner = reinterpret_cast<MagCapture *>(TlsGetValue(GetTlsIndex()));
+    
+    if (owner)
+        bRet = owner->onCaptured(srcdata, srcheader);
+
+    return bRet;
+}
+
+#endif // USING_GDI_CAPTURE
+
 bool MagCapture::setCallback(funcCaptureCallback fcb, void* args)
 {
     {
@@ -250,9 +312,9 @@ bool MagCapture::setCallback(funcCaptureCallback fcb, void* args)
 bool MagCapture::captureImage(const DesktopRect& capRect) 
 {
     bool bRet = false;
-    __try {
-        DesktopRect rect = capRect;
+    DesktopRect rect = capRect;
 
+    __try {
         if (!rect.is_empty()) {
             RECT wRect = { rect.left(), rect.top(), rect.right(), rect.bottom() };
 
@@ -267,6 +329,55 @@ bool MagCapture::captureImage(const DesktopRect& capRect)
         bRet = false;
         logger::log(LogLevel::Info, "exception");
     }
+
+#if USING_GDI_CAPTURE
+    BITMAPINFOHEADER &bmiHeader = bmi.bmiHeader;
+
+    auto &width = bmiHeader.biWidth;
+    auto &height = bmiHeader.biHeight;
+
+    if (width != rect.width() || height != rect.height()) 
+    {
+        if (_hDibBitmap)
+            ::DeleteObject(_hDibBitmap);
+
+        int nBitPerPixel = GetDeviceCaps(_magHDC, BITSPIXEL);
+
+        memset(&bmi, 0, sizeof(bmi));
+        bmiHeader.biSize = sizeof(bmiHeader);
+        bmiHeader.biWidth = rect.width();
+        bmiHeader.biHeight = rect.height();
+        bmiHeader.biPlanes = 1;
+        bmiHeader.biBitCount = USHORT(nBitPerPixel);
+        bmiHeader.biCompression = BI_RGB;
+
+        _hDibBitmap = ::CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, &_hdstPtr, NULL, 0);
+        if (_hDibBitmap == NULL) {
+            return (FALSE);
+        }
+    }
+
+    {
+        HBITMAP hOldBitmap = HBITMAP(::SelectObject(_compatibleDC, _hDibBitmap));
+
+        DIBSECTION dibsection;
+        int nBytes;
+        nBytes = ::GetObject(_hDibBitmap, sizeof(DIBSECTION), &dibsection);
+
+        bRet = BitBlt(_compatibleDC,               // 保存到的目标 图片对象 上下文
+                          0, 0,                        // 起始 x, y 坐标
+                          rect.width(), rect.height(), // 截图宽高
+                          _magHDC,                     // 截取对象的 上下文句柄
+                          0, 0,                        // 指定源矩形区域左上角的 X, y 逻辑坐标
+                          SRCCOPY)
+            == TRUE;
+
+        _hDibBitmap = HBITMAP(::SelectObject(_compatibleDC, hOldBitmap));
+
+        onCaptured(_hdstPtr, bmiHeader);
+
+    }
+ #endif
 
     return bRet;
 }
@@ -299,6 +410,9 @@ bool MagCapture::startCaptureWindow(HWND hWnd)
     CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(hm);
     DesktopRect rect = DesktopRect::MakeRECT(settings.rect());
 
+    RECT primeryRect;
+    CapUtility::GetPrimeryWindowsRect(primeryRect);
+
     initMagnifier(rect);
 
     return ret;
@@ -311,6 +425,9 @@ bool MagCapture::startCaptureScreen(HMONITOR hMonitor)
     CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(hMonitor);
     DesktopRect rect = DesktopRect::MakeRECT(settings.rect());
 
+    RECT primeryRect;
+    CapUtility::GetPrimeryWindowsRect(primeryRect);
+
     initMagnifier(rect);
 
     return ret;
@@ -321,6 +438,22 @@ bool MagCapture::stop()
     bool ret = false;
 
     destoryMagnifier();
+
+#if USING_GDI_CAPTURE
+    if (_compatibleDC)
+        ReleaseDC(NULL, _compatibleDC);
+
+    if (_magHDC)
+        ReleaseDC(NULL, _magHDC);
+
+    if (_hDibBitmap)
+        ::DeleteObject(_hDibBitmap);
+
+
+    _compatibleDC = nullptr;
+    _magHDC = nullptr;
+    _hDibBitmap = nullptr;
+#endif // USING_GDI_CAPTURE
 
     return ret;
 }

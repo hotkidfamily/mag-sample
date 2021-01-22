@@ -1,38 +1,42 @@
 #pragma once
 
-#include "MagFuncDefine.h"
-
-#include "DesktopRect.h"
+#include "capturer-define.h"
 
 #include <memory>
 #include <mutex>
 #include <vector>
 
-#include "VideoFrame.h"
+#include "MagFuncDefine.h"
 
-typedef void (*funcCaptureCallback)(VideoFrame* frame, void* args);
-
-class MagCapture
+class MagCapture : public CCapture
 {
 public:
     MagCapture();
     ~MagCapture();
 
 public:
-    bool startCaptureWindow(HWND hWnd);
-    bool startCaptureScreen(HMONITOR hMonitor);
-    bool stop();
-    bool onCaptured(void* srcdata, MAGIMAGEHEADER srcheader);
-    bool captureImage(const DesktopRect& rect);
-    bool setCallback(funcCaptureCallback, void*);
-    bool setExcludeWindows(HWND hWnd);
-    bool setExcludeWindows(std::vector<HWND> hWnd);
+    virtual bool startCaptureWindow(HWND hWnd) override;
+    virtual bool startCaptureScreen(HMONITOR hMonitor) override;
+    virtual bool stop() override;
+    virtual bool captureImage(const DesktopRect &rect) override;
+    virtual bool setCallback(funcCaptureCallback, void *) override;
+    virtual bool setExcludeWindows(HWND hWnd) override;
+    virtual bool setExcludeWindows(std::vector<HWND> hWnd) override;
+
+public:
+
+#if USING_GDI_CAPTURE
+    bool onCaptured(void *srcdata, BITMAPINFOHEADER &header);
+#else
+    bool onCaptured(void *srcdata, MAGIMAGEHEADER srcheader);
+#endif
 
 protected:
     bool initMagnifier(DesktopRect &rect);
     bool destoryMagnifier();
     bool loadMagnificationAPI();
-
+#if USING_GDI_CAPTURE
+#else
     static BOOL WINAPI OnMagImageScalingCallback(HWND hwnd,
                                                  void *srcdata,
                                                  MAGIMAGEHEADER srcheader,
@@ -41,7 +45,7 @@ protected:
                                                  RECT unclipped,
                                                  RECT clipped,
                                                  HRGN dirty);
-
+#endif // USING_GDI_CAPTURE
 private:
     std::unique_ptr<MagInterface> _api = nullptr;
     std::unique_ptr<VideoFrame> _frames;
@@ -53,6 +57,14 @@ private:
 
     HWND _hostWnd = nullptr;
     HWND _magWnd = nullptr;
+
+#if USING_GDI_CAPTURE
+    HDC _magHDC = nullptr;
+    HDC _compatibleDC = nullptr;
+    HBITMAP _hDibBitmap = nullptr;
+    void *_hdstPtr = nullptr;
+    BITMAPINFO bmi = {0};
+#endif
 
     std::recursive_mutex _cbMutex;
     funcCaptureCallback _callback = nullptr;

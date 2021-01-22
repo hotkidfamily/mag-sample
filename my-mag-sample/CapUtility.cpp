@@ -274,13 +274,15 @@ LRESULT UpdateSysmteMetrics(HWND hWnd)
     return 0;
 }
 
-LRESULT GetVirtualWindowsRect(RECT &rect)
+LRESULT GetPrimeryWindowsRect(RECT &rect)
 {
     UpdateSysmteMetrics(NULL);
-    rect.left = metrics[SM_XVIRTUALSCREEN];
-    rect.top = metrics[SM_YVIRTUALSCREEN];
-    rect.right = metrics[SM_CXVIRTUALSCREEN];
-    rect.bottom = metrics[SM_CYVIRTUALSCREEN];
+
+    rect.left = 0;
+    rect.top = 0;
+
+    rect.right = metrics[SM_CXSCREEN];
+    rect.bottom = metrics[SM_CYSCREEN];
 
     return 0;
 }
