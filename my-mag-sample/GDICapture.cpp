@@ -83,10 +83,6 @@ bool GDICapture::onCaptured(void *srcdata, BITMAPINFOHEADER &header)
     auto inStride = ComputePitch( header.biWidth, 32);
 
     uint8_t *pBits = (uint8_t*)srcdata;
-    if (header.biHeight > 0) {
-        pBits = pBits + (header.biHeight -1)*inStride;
-        inStride = -inStride;
-    }
 
     int bpp = header.biBitCount >> 3; // bpp should be 4
     if (!_frames.get() || width != static_cast<UINT>(_frames->width())
@@ -97,7 +93,7 @@ bool GDICapture::onCaptured(void *srcdata, BITMAPINFOHEADER &header)
 
     {
         uint8_t *pDst = reinterpret_cast<uint8_t *>(_frames->data());
-        uint8_t *pSrc = reinterpret_cast<uint8_t *>(pBits) + x*bpp + y*inStride;
+        uint8_t *pSrc = reinterpret_cast<uint8_t *>(pBits);
 
         for (int i = 0; i < height; i++) {
             memcpy(pDst, pSrc, stride);
@@ -128,7 +124,7 @@ bool GDICapture::captureImage(const DesktopRect &rect)
         memset(&bmi, 0, sizeof(bmi));
         bmiHeader.biSize = sizeof(bmiHeader);
         bmiHeader.biWidth = rect.width();
-        bmiHeader.biHeight = rect.height();
+        bmiHeader.biHeight = -rect.height();
         bmiHeader.biPlanes = 1;
         bmiHeader.biBitCount = USHORT(nBitPerPixel);
         bmiHeader.biCompression = BI_RGB;
