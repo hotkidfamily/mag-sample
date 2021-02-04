@@ -8,6 +8,8 @@
 
 #include "MagFuncDefine.h"
 
+#define USING_GDI_CAPTURE 0 // hardware render, so gdi capture nothing.
+
 class MagCapture : public CCapture
 {
 public:
