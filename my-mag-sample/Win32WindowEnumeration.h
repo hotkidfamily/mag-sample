@@ -88,18 +88,6 @@ bool IsAltTabWindow(Window const& window)
         return false;
     }
 
-    LONG style = GetWindowLong(hwnd, GWL_STYLE);
-    if (!((style & WS_DISABLED) != WS_DISABLED))
-    {
-        return false;
-    }
-
-    
-    LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-    if (exStyle & WS_EX_TOOLWINDOW) {
-        return false;
-    }
-
     DWORD cloaked = FALSE;
     if (_ptrDwmGetWindowAttribute) {
         HRESULT hrTemp = _ptrDwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, &cloaked, sizeof(cloaked));
@@ -176,6 +164,16 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
     //}
 
     if (IsInvalidWindow(window)) {
+        return TRUE;
+    }
+    
+    LONG style = GetWindowLong(hwnd, GWL_STYLE);
+    if (style & WS_DISABLED) {
+        return TRUE;
+    }
+
+    LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    if (exStyle & WS_EX_TOOLWINDOW) {
         return TRUE;
     }
 
