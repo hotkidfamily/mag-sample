@@ -42,6 +42,7 @@ public:
 // Implementation
 protected:
 	DECLARE_MESSAGE_MAP()
+
 };
 
 CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
@@ -75,6 +76,7 @@ void CmymagsampleDlg::DoDataExchange(CDataExchange* pDX)
     CDialogEx::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_COMBO_WNDLIST, _wndListCombobox);
     DDX_Control(pDX, IDC_STATIC_PVWWND, _previewWnd);
+    DDX_Control(pDX, IDC_STATIC_WININFO, _winRectInfoText);
 }
 
 BEGIN_MESSAGE_MAP(CmymagsampleDlg, CDialogEx)
@@ -89,6 +91,7 @@ BEGIN_MESSAGE_MAP(CmymagsampleDlg, CDialogEx)
     ON_MESSAGE(WM_DISPLAYCHANGE, &CmymagsampleDlg::OnDisplayChanged)
     ON_MESSAGE(WM_DPICHANGED, &CmymagsampleDlg::OnDPIChanged)
     //ON_MESSAGE(WM_SESSIONCHANGE, &CmymagsampleDlg::OnDisplayChanged)
+    ON_CBN_SELCHANGE(IDC_COMBO_WNDLIST, &CmymagsampleDlg::OnCbnSelchangeComboWndlist)
     END_MESSAGE_MAP()
 
 
@@ -231,9 +234,7 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
     if (TIMER_WINDOW_CAPTURE == nIDEvent) {
         RECT wRect;
         HWND &hWnd = capturer.winID;
-        if (S_OK != DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &wRect, sizeof(RECT))) {
-            ::GetWindowRect(hWnd, &wRect);
-        }
+        CapUtility::GetWindowRect(hWnd, wRect);
 
         HMONITOR hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
         CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(hMonitor);
@@ -305,7 +306,7 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
     capturer.capturer->setCallback(CaptureCallback, this);
     capturer.capturer->startCaptureWindow(capturer.winID);
     capturer.capturer->setExcludeWindows(GetSafeHwnd());
-
+    
     if (render.render) {
         render.render.reset(nullptr);
     }
@@ -367,4 +368,51 @@ void CmymagsampleDlg::OnBnClickedBtnStop()
     }
 
     _previewWnd.InvalidateRect(NULL);
+}
+
+
+void CmymagsampleDlg::OnCbnSelchangeComboWndlist()
+{
+    HWND hWnd;
+    try {
+        hWnd = _wndList.at(_wndListCombobox.GetCurSel()).Hwnd();
+    }
+    catch (std::out_of_range &e) {
+        return;
+    }
+    if (hWnd) 
+    {
+        CRect tOrigRect;
+        WINDOWINFO info;
+        info.cbSize = sizeof(WINDOWINFO);
+        ::GetWindowRect(hWnd, &tOrigRect);
+        ::GetWindowInfo(hWnd, &info);
+
+        BOOL bEnable;
+        if (S_OK == DwmIsCompositionEnabled(&bEnable)) {
+        }
+
+        CRect tDwmRect;
+        if (bEnable && (S_OK != DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &tDwmRect, sizeof(RECT)))) {
+        }
+
+        CRect tWithoutBorder;
+        CapUtility::GetWindowRect(hWnd, tWithoutBorder);
+
+        WCHAR strInfo[MAX_PATH];
+        swprintf_s(strInfo, MAX_PATH,
+                   L"Info: GetWindowRect = %d,%d,%d,%d(%dx%d), "
+                   L"WinInfo: (%dx%d)%d,%d,%d,%d\n"
+                   L"DwmGetWindowAttribute = %d,%d,%d,%d(%dx%d), "
+                   L"my = %d,%d,%d,%d(%dx%d)",
+                   tOrigRect.left, tOrigRect.top, tOrigRect.right, tOrigRect.bottom, tOrigRect.Width(),
+                   tOrigRect.Height(), info.cxWindowBorders, info.cyWindowBorders, info.rcWindow.left,
+                   info.rcWindow.top, info.rcWindow.right, info.rcWindow.bottom, tDwmRect.left, tDwmRect.top,
+                   tDwmRect.right, tDwmRect.bottom, tDwmRect.Width(), tDwmRect.Height(), tWithoutBorder.left,
+                   tWithoutBorder.top, tWithoutBorder.right, tWithoutBorder.bottom, tWithoutBorder.Width(),
+                   tWithoutBorder.Height()   
+        );
+
+        _winRectInfoText.SetWindowTextW(strInfo);
+    }
 }

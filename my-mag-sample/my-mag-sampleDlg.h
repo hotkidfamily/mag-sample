@@ -42,7 +42,7 @@ protected:
     afx_msg LRESULT OnDisplayChanged(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnDPIChanged(WPARAM wParam, LPARAM lParam);
 
-private:
+  private:
     std::unique_ptr<AppContext> _appContext;
     CComboBox _wndListCombobox;
 public:
@@ -50,4 +50,6 @@ public:
 
 	void OnCaptureFrame(VideoFrame *frame);
     CStatic _previewWnd;
+    CStatic _winRectInfoText;
+    afx_msg void OnCbnSelchangeComboWndlist();
 };
