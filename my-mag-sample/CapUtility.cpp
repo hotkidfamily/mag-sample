@@ -3,6 +3,7 @@
 
 #include <shellscalingapi.h>
 #include <set>
+#include <versionhelpers.h>
 
 namespace CapUtility
 {
@@ -375,6 +376,48 @@ done:
     ReleaseDC(hWnd, hdcWindow);
 
     return 0;
+}
+
+BOOL GetWindowRect(HWND hWnd, RECT &iRect)
+{
+    BOOL bRet = FALSE;
+    if (IsWindows8OrGreater()) {
+        bRet = S_OK != DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &iRect, sizeof(RECT));
+    }
+    else if (IsWindows7OrGreater()){
+        WINDOWINFO info;
+        info.cbSize = sizeof(WINDOWINFO);
+        CRect rect;
+        ::GetWindowRect(hWnd, rect);
+        ::GetWindowInfo(hWnd, &info);
+
+        if (IsZoomed(hWnd)) {
+            rect.top += info.cyWindowBorders;
+            rect.left += info.cxWindowBorders;
+            rect.bottom -= info.cyWindowBorders;
+            rect.right -= info.cxWindowBorders;
+        }
+        else if (!(info.dwStyle & WS_THICKFRAME)) {
+            rect.top += info.cyWindowBorders / 4;
+            rect.left += info.cxWindowBorders / 4;
+            rect.bottom -= info.cyWindowBorders / 4;
+            rect.right -= info.cxWindowBorders / 4;
+        }
+        else if (info.dwStyle & WS_OVERLAPPEDWINDOW) {
+            rect.left += info.cxWindowBorders;
+            rect.bottom -= info.cyWindowBorders;
+            rect.right -= info.cxWindowBorders;
+        }
+        iRect = rect;
+        bRet = TRUE;
+    }
+
+    if( !bRet ){
+        GetWindowRect(hWnd, &iRect);
+        bRet = TRUE;
+    }
+
+    return bRet;
 }
 
 };
