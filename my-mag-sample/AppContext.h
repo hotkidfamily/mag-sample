@@ -6,6 +6,8 @@
 
 #include <vector>
 
+const uint32_t KDefaultFPS = 10;
+
 typedef struct tagAppContext
 {
     struct {

@@ -108,7 +108,6 @@ bool GDICapture::onCaptured(void *srcdata, BITMAPINFOHEADER &header)
             pDst += stride;
             pSrc += inStride;
         }
-        if (1)
         {
             std::vector<DesktopRect> maskRects;
             for (auto &h : _coverdWindows) {

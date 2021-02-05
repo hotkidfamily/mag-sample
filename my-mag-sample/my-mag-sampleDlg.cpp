@@ -322,7 +322,7 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
     render.render->init(_previewWnd.GetSafeHwnd());
     render.render->setMode(2);
 
-    timer.fps = 30;
+    timer.fps = KDefaultFPS;
     timer.timerID = TIMER_WINDOW_CAPTURE;
     timer.timerInst = SetTimer(timer.timerID, 1000 / timer.fps, NULL);
 }
@@ -358,7 +358,7 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     render.render->init(_previewWnd.GetSafeHwnd());
     render.render->setMode(2);
 
-    timer.fps = 30;
+    timer.fps = KDefaultFPS;
     timer.timerID = TIMER_SCREEN_CAPTURE;
     timer.timerInst = SetTimer(timer.timerID, 1000 / timer.fps, NULL);
 }
