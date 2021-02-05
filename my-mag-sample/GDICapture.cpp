@@ -99,18 +99,33 @@ bool GDICapture::onCaptured(void *srcdata, BITMAPINFOHEADER &header)
         _frames.reset(VideoFrame::MakeFrame(width, height, stride, VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
     }
 
-    std::vector<DesktopRect> maskRects;
-    if (_coverdWindows.size()) {
-        // have 
-    }
     {
         uint8_t *pDst = reinterpret_cast<uint8_t *>(_frames->data());
-        uint8_t *pSrc = reinterpret_cast<uint8_t *>(pBits);
+        uint8_t *pSrc = reinterpret_cast<uint8_t *>(pBits);//+y *inStride + x *bpp;
 
         for (int i = 0; i < height; i++) {
             memcpy(pDst, pSrc, stride);
             pDst += stride;
             pSrc += inStride;
+        }
+        if (0)
+        {
+            std::vector<DesktopRect> maskRects;
+            for (auto &h : _coverdWindows) {
+                CRect rect;
+                CapUtility::GetWindowRect(h, rect);
+                CRect iRect;
+                RECT sRect = { _lastRect.left(), _lastRect.top(), _lastRect.right(), _lastRect.bottom() };
+                if (IntersectRect(&iRect, &rect, &sRect)) {
+                    uint8_t *pDst = reinterpret_cast<uint8_t *>(_frames->data()) + y * stride + x * bpp;
+                    int32_t mStride = iRect.Width() * bpp;
+
+                    for (int i = 0; i < iRect.Height(); i++) {
+                        memset(pDst, 50, mStride);
+                        pDst += stride;
+                    }
+                }
+            }
         }
     }
 
@@ -159,7 +174,7 @@ bool GDICapture::captureImage(const DesktopRect &rect)
            0, 0,    // 起始 x, y 坐标
            rect.width(), rect.height(), // 截图宽高
            _monitorDC,     // 截取对象的 上下文句柄
-           0,0,     // 指定源矩形区域左上角的 X, y 逻辑坐标
+           rect.left(), rect.top(),     // 指定源矩形区域左上角的 X, y 逻辑坐标
            rect.width(), rect.height(), // 截图宽高
            SRCCOPY) == TRUE;
 
