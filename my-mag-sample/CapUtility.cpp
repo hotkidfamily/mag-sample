@@ -382,7 +382,7 @@ BOOL GetWindowRect(HWND hWnd, RECT &iRect)
 {
     BOOL bRet = FALSE;
     if (IsWindows8OrGreater()) {
-        bRet = S_OK != DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &iRect, sizeof(RECT));
+        bRet = S_OK == DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &iRect, sizeof(RECT));
     }
     else if (IsWindows7OrGreater()){
         WINDOWINFO info;
