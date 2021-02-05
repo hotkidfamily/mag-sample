@@ -16,6 +16,7 @@ class GDICapture : public CCapture {
     virtual bool setCallback(funcCaptureCallback, void *) override;
     virtual bool setExcludeWindows(HWND hWnd) override;
     virtual bool setExcludeWindows(std::vector<HWND> hWnd) override;
+    virtual const char *getName() override;
 
   public:
     bool onCaptured(void *srcdata, BITMAPINFOHEADER& srcheader);
@@ -33,4 +34,7 @@ class GDICapture : public CCapture {
     std::recursive_mutex _cbMutex;
     funcCaptureCallback _callback = nullptr;
     void *_callbackargs = nullptr;
+
+
+    std::vector<HWND> _coverdWindows;
 };

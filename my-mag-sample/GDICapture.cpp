@@ -28,6 +28,10 @@ bool GDICapture::startCaptureWindow(HWND hWnd)
     _monitorDC = CreateDCW(L"myDisplay", mInfo.szDevice, NULL, NULL);
     _compatibleDC = ::CreateCompatibleDC(_monitorDC);
 
+    bRet = _monitorDC && _compatibleDC;
+    if (!bRet)
+        logger::log(LogLevel::Info, "monitor DC %x, compatible DC %x, bRet %d", _monitorDC, _compatibleDC, bRet);
+
     return bRet;
 }
 
@@ -43,6 +47,10 @@ bool GDICapture::startCaptureScreen(HMONITOR hMonitor)
 
     _monitorDC = CreateDCW(L"myDisplay", mInfo.szDevice, NULL, NULL);
     _compatibleDC = ::CreateCompatibleDC(_monitorDC);
+
+    bRet = _monitorDC && _compatibleDC;
+    if (!bRet)
+        logger::log(LogLevel::Info, "monitor DC %x, compatible DC %x, bRet %d", _monitorDC, _compatibleDC, bRet);
 
     return bRet;
 }
@@ -91,6 +99,7 @@ bool GDICapture::onCaptured(void *srcdata, BITMAPINFOHEADER &header)
         _frames.reset(VideoFrame::MakeFrame(width, height, stride, VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
     }
 
+    
     {
         uint8_t *pDst = reinterpret_cast<uint8_t *>(_frames->data());
         uint8_t *pSrc = reinterpret_cast<uint8_t *>(pBits);
@@ -173,11 +182,21 @@ bool GDICapture::setCallback(funcCaptureCallback fcb, void *args)
 bool GDICapture::setExcludeWindows(HWND hWnd)
 {
     bool bRet = false;
+    _coverdWindows.clear();
+    _coverdWindows.push_back(hWnd);
     return bRet;
 }
 
 bool GDICapture::setExcludeWindows(std::vector<HWND> hWnd)
 {
     bool bRet = false;
+
+    _coverdWindows = std::move(hWnd);
+
     return bRet;
+}
+
+const char * GDICapture::getName()
+{
+    return "GDI capture";
 }

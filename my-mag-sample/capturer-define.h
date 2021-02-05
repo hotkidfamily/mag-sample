@@ -23,5 +23,6 @@ class CCapture
     virtual bool setCallback(funcCaptureCallback, void *) = 0;
     virtual bool setExcludeWindows(HWND hWnd) = 0;
     virtual bool setExcludeWindows(std::vector<HWND> hWnd) = 0;
+    virtual const char *getName() = 0;
 
 };

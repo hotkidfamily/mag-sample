@@ -92,6 +92,7 @@ BEGIN_MESSAGE_MAP(CmymagsampleDlg, CDialogEx)
     ON_MESSAGE(WM_DPICHANGED, &CmymagsampleDlg::OnDPIChanged)
     //ON_MESSAGE(WM_SESSIONCHANGE, &CmymagsampleDlg::OnDisplayChanged)
     ON_CBN_SELCHANGE(IDC_COMBO_WNDLIST, &CmymagsampleDlg::OnCbnSelchangeComboWndlist)
+    ON_WM_SIZE()
     END_MESSAGE_MAP()
 
 
@@ -199,7 +200,7 @@ void CaptureCallback(VideoFrame *frame, void *args)
 
 LRESULT CmymagsampleDlg::OnDPIChanged(WPARAM wParam, LPARAM lParam)
 {
-    auto &capturer = _appContext->capturer;
+    auto &capturer = _appContext->host;
 
     long dpi = LOWORD(wParam);
     RECT newRect = *(reinterpret_cast<const RECT *>(lParam));
@@ -210,12 +211,12 @@ LRESULT CmymagsampleDlg::OnDPIChanged(WPARAM wParam, LPARAM lParam)
 LRESULT CmymagsampleDlg::OnDisplayChanged(WPARAM wParam, LPARAM lParam)
 {
     lParam = lParam;
-    auto &capturer = _appContext->capturer;
+    auto &capturer = _appContext->host;
 
     capturer.rect.set_width(LOWORD(lParam));
     capturer.rect.set_width(HIWORD(lParam));
 
-    if (capturer.capturer.get()) {
+    if (capturer.host.get()) {
         if (capturer.winID) {
             OnBnClickedBtnWndcap();
         }
@@ -229,7 +230,7 @@ LRESULT CmymagsampleDlg::OnDisplayChanged(WPARAM wParam, LPARAM lParam)
 
 void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
 {
-    auto &capturer = _appContext->capturer;
+    auto &capturer = _appContext->host;
 
     if (TIMER_WINDOW_CAPTURE == nIDEvent) {
         RECT wRect;
@@ -249,17 +250,17 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
 
         if (CapUtility::isWndCanCap(hWnd)) {
             DesktopRect &rect = capturer.rect;
-            if (capturer.capturer.get()) {
-                capturer.capturer->setExcludeWindows(wndList);
-                capturer.capturer->captureImage(rect);
+            if (capturer.host.get()) {
+                capturer.host->setExcludeWindows(wndList);
+                capturer.host->captureImage(rect);
             }
         }
     }
     else if (TIMER_SCREEN_CAPTURE == nIDEvent) {
         DesktopRect rect = capturer.rect;
 
-        if (capturer.capturer.get())
-            capturer.capturer->captureImage(rect);
+        if (capturer.host.get())
+            capturer.host->captureImage(rect);
     }
 }
 
@@ -267,7 +268,7 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
 void CmymagsampleDlg::OnBnClickedButtonFindwind()
 {
     int curSel = 0;
-    auto &capturer = _appContext->capturer;
+    auto &capturer = _appContext->host;
 
     _wndListCombobox.ResetContent();
     _wndList.clear();
@@ -290,7 +291,7 @@ void CmymagsampleDlg::OnBnClickedButtonFindwind()
 void CmymagsampleDlg::OnBnClickedBtnWndcap()
 {
     auto &timer = _appContext->timer;
-    auto &capturer = _appContext->capturer;
+    auto &capturer = _appContext->host;
     auto &render = _appContext->render;
 
     OnBnClickedBtnStop();
@@ -302,10 +303,10 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
         return;
     }
     capturer.screenID = nullptr;
-    capturer.capturer.reset(new MagCapture());
-    capturer.capturer->setCallback(CaptureCallback, this);
-    capturer.capturer->startCaptureWindow(capturer.winID);
-    capturer.capturer->setExcludeWindows(GetSafeHwnd());
+    capturer.host.reset(new GDICapture());
+    capturer.host->setCallback(CaptureCallback, this);
+    capturer.host->startCaptureWindow(capturer.winID);
+    capturer.host->setExcludeWindows(GetSafeHwnd());
     
     if (render.render) {
         render.render.reset(nullptr);
@@ -322,7 +323,7 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
 void CmymagsampleDlg::OnBnClickedBtnScreencap()
 {
     auto &timer = _appContext->timer;
-    auto &capture = _appContext->capturer;
+    auto &capture = _appContext->host;
     auto &render = _appContext->render;
 
     OnBnClickedBtnStop();
@@ -332,9 +333,16 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     capture.rect = DesktopRect::MakeRECT(settings.rect());
 
     capture.winID = 0;
-    capture.capturer.reset(new MagCapture());
-    capture.capturer->setCallback(CaptureCallback, this);
-    capture.capturer->startCaptureScreen(capture.screenID);
+    capture.host.reset(new MagCapture());
+    capture.host->setCallback(CaptureCallback, this);
+    if (!capture.host->startCaptureScreen(capture.screenID)) {
+        capture.host.reset(new GDICapture());
+        capture.host->setCallback(CaptureCallback, this);
+        if (!capture.host->startCaptureScreen(capture.screenID)) {
+            FlashWindowEx(FLASHW_ALL, 3, 300);
+            return;
+        }
+    }
 
     if (render.render) {
         render.render.reset(nullptr);
@@ -352,7 +360,7 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
 void CmymagsampleDlg::OnBnClickedBtnStop()
 {
     auto &timer = _appContext->timer;
-    auto &capture = _appContext->capturer;
+    auto &capture = _appContext->host;
     auto &render = _appContext->render;
 
     if (timer.timerInst) {
@@ -360,8 +368,8 @@ void CmymagsampleDlg::OnBnClickedBtnStop()
         timer.timerInst = 0;
     }
 
-    if (capture.capturer.get())
-        capture.capturer.reset(nullptr);
+    if (capture.host.get())
+        capture.host.reset(nullptr);
 
     if (render.render) {
         render.render.reset(nullptr);
@@ -373,13 +381,15 @@ void CmymagsampleDlg::OnBnClickedBtnStop()
 
 void CmymagsampleDlg::OnCbnSelchangeComboWndlist()
 {
-    HWND hWnd;
+    HWND hWnd = nullptr;
+
     try {
         hWnd = _wndList.at(_wndListCombobox.GetCurSel()).Hwnd();
     }
     catch (std::out_of_range &e) {
         return;
     }
+
     if (hWnd) 
     {
         CRect tOrigRect;
@@ -415,4 +425,9 @@ void CmymagsampleDlg::OnCbnSelchangeComboWndlist()
 
         _winRectInfoText.SetWindowTextW(strInfo);
     }
+}
+
+void CmymagsampleDlg::OnSize(UINT nType, int cx, int cy)
+{
+    CDialogEx::OnSize(nType, cx, cy);
 }

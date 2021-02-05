@@ -24,6 +24,7 @@ public:
     virtual bool setCallback(funcCaptureCallback, void *) override;
     virtual bool setExcludeWindows(HWND hWnd) override;
     virtual bool setExcludeWindows(std::vector<HWND> hWnd) override;
+    virtual const char *getName() override;
 
 public:
 

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 
+#include <VersionHelpers.h>
 
 #include "DesktopRect.h"
 #include "MagCapture.h"
@@ -79,14 +80,26 @@ bool MagCapture::loadMagnificationAPI()
 
 bool MagCapture::initMagnifier(DesktopRect &rect)
 {
-    BOOL result = FALSE;
+    BOOL result = TRUE;
     HMODULE hInstance = nullptr;
-
+    const char *info = "OK";
 
     do 
     {
+        /*
+         * It will not work when DWM disabled.
+         */
+        if (IsWindows7OrGreater()) {
+            DwmIsCompositionEnabled(&result);
+        }
+        if (!result) {
+            info = "DWM disabled.";
+            break;
+        }
+
         result = _api->Initialize();
         if (!result) {
+            info = "Mag Init.";
             break;
         }
 
@@ -94,6 +107,7 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
             GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
                                  reinterpret_cast<char *>(&DefWindowProc), &hInstance);
         if (!result) {
+            info = "Get Module handle.";
             break;
         }
 
@@ -117,6 +131,7 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
                                    rect.left(), rect.top(), rect.width(), rect.height(), nullptr, nullptr, hInstance,
                                    nullptr);
         if (!_hostWnd) {
+            info = "Create Mag Host Window.";
             break;
         }
 
@@ -126,6 +141,7 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
         _magWnd = CreateWindowExW(0, kMagnifierWindowClass, kMagnifierWindowName, WS_CHILD | MS_SHOWMAGNIFIEDCURSOR, 0,
                                   0, rect.width(), rect.height(), _hostWnd, nullptr, hInstance, nullptr);
         if (!_magWnd) {
+            info = "Create Mag Window.";
             break;
         }
 
@@ -141,6 +157,7 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
         // Set the scaling callback to receive captured image.
         result = _api->SetImageScalingCallback(_magWnd, &MagCapture::OnMagImageScalingCallback);
         if (!result) {
+            info = "Set Image Scaling Callback.";
             break;
         }
 #endif // USING_GDI_CAPTURE
@@ -148,6 +165,7 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
     } while (0);
     
     if (!result) {
+        logger::log(LogLevel::Error, "init magnifier failed %s", info);
         destoryMagnifier();
     }
     else {
@@ -240,6 +258,10 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
     {
         return false;
     }
+
+    /*
+     * on multiple screen platform, offset maybe changed and may cause crash, so disable one.
+     */
     if (_offset != -1 && header.offset != _offset) {
         return false;
     }
@@ -428,7 +450,7 @@ bool MagCapture::startCaptureScreen(HMONITOR hMonitor)
     RECT primeryRect;
     CapUtility::GetPrimeryWindowsRect(primeryRect);
 
-    initMagnifier(rect);
+    ret = initMagnifier(rect);
 
     return ret;
 }
@@ -456,4 +478,9 @@ bool MagCapture::stop()
 #endif // USING_GDI_CAPTURE
 
     return ret;
+}
+
+const char *MagCapture::getName()
+{
+    return "GDI capture";
 }

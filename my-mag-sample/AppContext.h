@@ -15,13 +15,13 @@ typedef struct tagAppContext
     }timer;
 
     struct {
-        std::unique_ptr<CCapture> capturer;
+        std::unique_ptr<CCapture> host;
 
         HWND winID;
         HMONITOR screenID;
 
         DesktopRect rect;
-    }capturer;
+    }host;
 
     struct
     {

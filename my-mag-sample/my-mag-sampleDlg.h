@@ -52,4 +52,5 @@ public:
     CStatic _previewWnd;
     CStatic _winRectInfoText;
     afx_msg void OnCbnSelchangeComboWndlist();
+    afx_msg void OnSize(UINT nType, int cx, int cy);
 };
