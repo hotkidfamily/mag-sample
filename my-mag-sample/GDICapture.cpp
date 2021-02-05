@@ -108,7 +108,7 @@ bool GDICapture::onCaptured(void *srcdata, BITMAPINFOHEADER &header)
             pDst += stride;
             pSrc += inStride;
         }
-        if (0)
+        if (1)
         {
             std::vector<DesktopRect> maskRects;
             for (auto &h : _coverdWindows) {
@@ -117,12 +117,16 @@ bool GDICapture::onCaptured(void *srcdata, BITMAPINFOHEADER &header)
                 CRect iRect;
                 RECT sRect = { _lastRect.left(), _lastRect.top(), _lastRect.right(), _lastRect.bottom() };
                 if (IntersectRect(&iRect, &rect, &sRect)) {
-                    uint8_t *pDst = reinterpret_cast<uint8_t *>(_frames->data()) + y * stride + x * bpp;
+                    int left = iRect.left - sRect.left;
+                    int top = iRect.top - sRect.top;
+
+                    uint8_t *pDst
+                        = reinterpret_cast<uint8_t *>(_frames->data()) + top * _frames->stride() + left * bpp;
                     int32_t mStride = iRect.Width() * bpp;
 
                     for (int i = 0; i < iRect.Height(); i++) {
                         memset(pDst, 50, mStride);
-                        pDst += stride;
+                        pDst += _frames->stride();
                     }
                 }
             }

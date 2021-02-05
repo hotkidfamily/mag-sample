@@ -303,7 +303,7 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
         return;
     }
     capturer.screenID = nullptr;
-    capturer.host.reset(new MagCapture());
+    capturer.host.reset(new GDICapture());
     capturer.host->setCallback(CaptureCallback, this);
     if (!capturer.host->startCaptureWindow(capturer.winID)) {
         capturer.host.reset(new MagCapture());
