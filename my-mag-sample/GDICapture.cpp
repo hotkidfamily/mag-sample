@@ -99,7 +99,10 @@ bool GDICapture::onCaptured(void *srcdata, BITMAPINFOHEADER &header)
         _frames.reset(VideoFrame::MakeFrame(width, height, stride, VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
     }
 
-    
+    std::vector<DesktopRect> maskRects;
+    if (_coverdWindows.size()) {
+        // have 
+    }
     {
         uint8_t *pDst = reinterpret_cast<uint8_t *>(_frames->data());
         uint8_t *pSrc = reinterpret_cast<uint8_t *>(pBits);

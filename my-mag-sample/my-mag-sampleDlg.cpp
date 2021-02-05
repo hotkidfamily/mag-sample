@@ -258,7 +258,7 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
     }
     else if (TIMER_SCREEN_CAPTURE == nIDEvent) {
         DesktopRect rect = capturer.rect;
-
+        capturer.host->setExcludeWindows(GetSafeHwnd());
         if (capturer.host.get())
             capturer.host->captureImage(rect);
     }
@@ -303,9 +303,16 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
         return;
     }
     capturer.screenID = nullptr;
-    capturer.host.reset(new GDICapture());
+    capturer.host.reset(new MagCapture());
     capturer.host->setCallback(CaptureCallback, this);
-    capturer.host->startCaptureWindow(capturer.winID);
+    if (!capturer.host->startCaptureWindow(capturer.winID)) {
+        capturer.host.reset(new MagCapture());
+        capturer.host->setCallback(CaptureCallback, this);
+        if (!capturer.host->startCaptureWindow(capturer.winID)) {
+            FlashWindowEx(FLASHW_ALL, 3, 300);
+            return;
+        }
+    }
     capturer.host->setExcludeWindows(GetSafeHwnd());
     
     if (render.render) {

@@ -128,7 +128,7 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
         _hostWnd = CreateWindowExW(WS_EX_TOPMOST |WS_EX_LAYERED, kMagnifierHostClass, kHostWindowName,
                                    WS_CLIPCHILDREN | WS_POPUP | WS_EX_TRANSPARENT | // Click-through
                                        WS_EX_TOOLWINDOW,                            // Do not show program on taskbar,
-                                   rect.left(), rect.top(), rect.width(), rect.height(), nullptr, nullptr, hInstance,
+                                   0, 0, rect.width(), rect.height(), nullptr, nullptr, hInstance,
                                    nullptr);
         if (!_hostWnd) {
             info = "Create Mag Host Window.";
@@ -435,7 +435,7 @@ bool MagCapture::startCaptureWindow(HWND hWnd)
     RECT primeryRect;
     CapUtility::GetPrimeryWindowsRect(primeryRect);
 
-    initMagnifier(rect);
+    ret = initMagnifier(rect);
 
     return ret;
 }
