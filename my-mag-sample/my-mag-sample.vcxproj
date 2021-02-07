@@ -211,6 +211,7 @@
     <ClInclude Include="CapUtility.h" />
     <ClInclude Include="d3drender.h" />
     <ClInclude Include="DesktopRect.h" />
+    <ClInclude Include="DXGICapture.h" />
     <ClInclude Include="GDICapture.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="MagCapture.h" />
@@ -226,6 +227,7 @@
   <ItemGroup>
     <ClCompile Include="CapUtility.cpp" />
     <ClCompile Include="d3drender.cpp" />
+    <ClCompile Include="DXGICapture.cpp" />
     <ClCompile Include="GDICapture.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="MagCapture.cpp" />
