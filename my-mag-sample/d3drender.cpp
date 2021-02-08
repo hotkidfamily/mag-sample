@@ -268,7 +268,6 @@ HRESULT d3drender::_resetDevice(CRect &wndRect)
         params.MultiSampleType = multiType;
         params.MultiSampleQuality = 0;
 
-
         hRet = _d3d9Api->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, _hwnd, flags, &params, &_device);
         if (FAILED(hRet)) {
             info = _T("Failed to create Direct3D 9 device.");
@@ -279,14 +278,12 @@ HRESULT d3drender::_resetDevice(CRect &wndRect)
         HR_CHECK(_device->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE));
         HR_CHECK(_device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE));
         HR_CHECK(_device->SetRenderState(D3DRS_LIGHTING, FALSE));
+
         // Setup global render state.
-        //HR_CHECK(_device->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_MIRROR));
-        //HR_CHECK(_device->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_MIRROR));
-        //HR_CHECK(_device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR));
-        //HR_CHECK(_device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR));
-        //HR_CHECK(_device->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR));
-        //HR_CHECK(_device->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP));
-        //HR_CHECK(_device->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP));
+//         HR_CHECK(_device->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_MIRROR));
+//         HR_CHECK(_device->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_MIRROR));
+        HR_CHECK(_device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC));
+        HR_CHECK(_device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC));
         
         HR_CHECK(hRet = D3DXCreateFont(_device, FONT_HEIGHT, 0, FW_NORMAL, 0, FALSE,
             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Calibri"), &_printer));
@@ -803,7 +800,7 @@ HRESULT d3drender::_drawInfo(HDC hdc, RECT *rc, TCHAR *format, ...)
 
     ::OffsetRect(rc, 0, 2);
 
-    hRet = _printer->DrawTextW(nullptr, buf, -1, rc, DT_LEFT | DT_TOP, 0xffffff00);
+    hRet = _printer->DrawTextW(nullptr, buf, -1, rc, DT_LEFT | DT_TOP, 0xff000000);
 
     rc->top += FONT_HEIGHT;
 
