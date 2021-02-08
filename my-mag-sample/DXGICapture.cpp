@@ -195,7 +195,10 @@ bool DXGICapture::captureImage(const DesktopRect &rect)
     ComPtr<IDXGIResource> hDesktopResource = NULL;
     DXGI_OUTDUPL_FRAME_INFO FrameInfo;
     HRESULT hr = _desktopDuplication->AcquireNextFrame(0, &FrameInfo, &hDesktopResource);
-    if (FAILED(hr)) {
+    if (hr == DXGI_ERROR_WAIT_TIMEOUT) {
+        return TRUE;
+    }
+    else if (FAILED(hr)) {
         return TRUE;
     }
 
@@ -204,10 +207,44 @@ bool DXGICapture::captureImage(const DesktopRect &rect)
     if (FAILED(hr)) {
         return FALSE;
     }
-    
+
+    D3D11_TEXTURE2D_DESC fDesc;
+    hAcquiredDesktopImage->GetDesc(&fDesc);
+    ComPtr<ID3D11Texture2D> hNewDesktopImage2 = NULL;
+    fDesc.Usage = D3D11_USAGE_STAGING;
+    fDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    fDesc.BindFlags = 0;
+    fDesc.MiscFlags = 0;
+    fDesc.MipLevels = 1;
+    fDesc.ArraySize = 1;
+    fDesc.SampleDesc.Count = 1;
+    hr = _device->CreateTexture2D(&fDesc, NULL, &hNewDesktopImage2);
+    if (FAILED(hr)) {
+        _desktopDuplication->ReleaseFrame();
+        return FALSE;
+    }
+#if 0 // draw cursor info
+    hAcquiredDesktopImage->GetDesc(&fDesc);
+    ComPtr<ID3D11Texture2D> hNewDesktopImage = NULL;
+    fDesc.Usage = D3D11_USAGE_DEFAULT;
+    fDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+    fDesc.MiscFlags = D3D11_RESOURCE_MISC_GDI_COMPATIBLE;
+    fDesc.MipLevels = 1;
+    fDesc.ArraySize = 1;
+    fDesc.SampleDesc.Count = 1;
+    fDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    hr = _device->CreateTexture2D(&fDesc, NULL, &hNewDesktopImage);
+    if (FAILED(hr)) {
+        _desktopDuplication->ReleaseFrame();
+        return FALSE;
+    }
+
+    _deviceContext->CopyResource(hNewDesktopImage.Get(), hAcquiredDesktopImage.Get());
+    _desktopDuplication->ReleaseFrame();
+
     {
-        ComPtr<IDXGISurface1> hStagingSurf;
-        hr = hAcquiredDesktopImage->QueryInterface(__uuidof(IDXGISurface1), (void **)&hStagingSurf);
+        ComPtr<IDXGISurface1> hStagingSurf = NULL;
+        hr = hNewDesktopImage->QueryInterface(__uuidof(IDXGISurface1), &hStagingSurf);
         if (SUCCEEDED(hr)) {
             CURSORINFO lCursorInfo = { 0 };
 
@@ -220,36 +257,24 @@ bool DXGICapture::captureImage(const DesktopRect &rect)
                     auto lCursorSize = lCursorInfo.cbSize;
 
                     HDC lHDC;
-                    hStagingSurf->GetDC(FALSE, &lHDC);
-                    DrawIconEx(lHDC, lCursorPosition.x, lCursorPosition.y, lCursorInfo.hCursor, 0, 0, 0, 0,
-                               DI_NORMAL | DI_DEFAULTSIZE);
+                    HRESULT tHr = hStagingSurf->GetDC(FALSE, &lHDC);
+                    if (SUCCEEDED(tHr))
+                        DrawIconEx(lHDC, lCursorPosition.x, lCursorPosition.y, lCursorInfo.hCursor, 0, 0, 0, 0,
+                                   DI_NORMAL | DI_DEFAULTSIZE);
                     hStagingSurf->ReleaseDC(nullptr);
                 }
             }
         }
     }
 
-    D3D11_TEXTURE2D_DESC frameDescriptor;
-    hAcquiredDesktopImage->GetDesc(&frameDescriptor);
-    ComPtr<ID3D11Texture2D> hNewDesktopImage = NULL;
-    frameDescriptor.Usage = D3D11_USAGE_STAGING;
-    frameDescriptor.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-    frameDescriptor.BindFlags = 0;
-    frameDescriptor.MiscFlags = 0;
-    frameDescriptor.MipLevels = 1;
-    frameDescriptor.ArraySize = 1;
-    frameDescriptor.SampleDesc.Count = 1;
-    hr = _device->CreateTexture2D(&frameDescriptor, NULL, &hNewDesktopImage);
-    if (FAILED(hr)) {
-        _desktopDuplication->ReleaseFrame();
-        return FALSE;
-    }
-
-    _deviceContext->CopyResource(hNewDesktopImage.Get(), hAcquiredDesktopImage.Get());
+    _deviceContext->CopyResource(hNewDesktopImage2.Get(), hNewDesktopImage.Get());
+#else
+    _deviceContext->CopyResource(hNewDesktopImage2.Get(), hAcquiredDesktopImage.Get());
     _desktopDuplication->ReleaseFrame();
+#endif
 
     ComPtr<IDXGISurface1> hStagingSurf = NULL;
-    hr = hNewDesktopImage->QueryInterface(__uuidof(IDXGISurface1), &hStagingSurf);
+    hr = hNewDesktopImage2->QueryInterface(__uuidof(IDXGISurface1), &hStagingSurf);
     if (FAILED(hr)) {
         return FALSE;
     }
