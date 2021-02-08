@@ -58,4 +58,5 @@ public:
 
 	void OnCaptureFrame(VideoFrame *frame);
     void CaptureThread();
+    afx_msg void OnClose();
 };

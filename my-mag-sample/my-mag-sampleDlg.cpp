@@ -95,6 +95,7 @@ BEGIN_MESSAGE_MAP(CmymagsampleDlg, CDialogEx)
     ON_CBN_SELCHANGE(IDC_COMBO_WNDLIST, &CmymagsampleDlg::OnCbnSelchangeComboWndlist)
     ON_WM_SIZE()
     ON_MESSAGE(KThreadCaptureMessage, OnUserDefinedMessage)
+    ON_WM_CLOSE()
     END_MESSAGE_MAP()
 
 
@@ -315,7 +316,7 @@ void CmymagsampleDlg::CaptureThread()
     auto &timer = _appContext->timer;
     while (timer.bRunning) {
         std::chrono::steady_clock::time_point start = std::chrono::high_resolution_clock::now();
-        SendMessage(KThreadCaptureMessage, 0, 0);
+        OnTimer(timer.timerID);
         std::chrono::steady_clock::time_point end = std::chrono::high_resolution_clock::now();
         auto interval = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         if (interval.count() >= 1000 / timer.fps)
@@ -494,4 +495,10 @@ void CmymagsampleDlg::OnCbnSelchangeComboWndlist()
 void CmymagsampleDlg::OnSize(UINT nType, int cx, int cy)
 {
     CDialogEx::OnSize(nType, cx, cy);
+}
+
+void CmymagsampleDlg::OnClose()
+{
+    OnBnClickedBtnStop();
+    CDialogEx::OnClose();
 }
