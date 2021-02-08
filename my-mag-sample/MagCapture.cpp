@@ -484,3 +484,8 @@ const char *MagCapture::getName()
 {
     return "GDI capture";
 }
+
+bool MagCapture::usingTimer()
+{
+    return true;
+}

@@ -24,5 +24,6 @@ class CCapture
     virtual bool setExcludeWindows(HWND hWnd) = 0;
     virtual bool setExcludeWindows(std::vector<HWND> hWnd) = 0;
     virtual const char *getName() = 0;
+    virtual bool usingTimer() = 0;
 
 };

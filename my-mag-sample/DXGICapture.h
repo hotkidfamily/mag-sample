@@ -36,6 +36,7 @@ class DXGICapture : public CCapture {
     virtual bool setExcludeWindows(HWND hWnd) override;
     virtual bool setExcludeWindows(std::vector<HWND> hWnd) override;
     virtual const char *getName() override;
+    virtual bool usingTimer() override;
 
   public:
     bool onCaptured(DXGI_MAPPED_RECT &rect, DXGI_OUTPUT_DESC &desc);

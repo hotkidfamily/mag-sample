@@ -217,7 +217,12 @@ bool GDICapture::setExcludeWindows(std::vector<HWND> hWnd)
     return bRet;
 }
 
-const char * GDICapture::getName()
+const char* GDICapture::getName()
 {
     return "GDI capture";
+}
+
+bool GDICapture::usingTimer()
+{
+    return true;
 }

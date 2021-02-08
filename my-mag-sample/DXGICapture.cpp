@@ -294,3 +294,8 @@ const char *DXGICapture::getName()
 {
     return "DXGI Capture";
 }
+
+bool DXGICapture::usingTimer()
+{
+    return false;
+}

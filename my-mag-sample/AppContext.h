@@ -8,6 +8,7 @@
 #include <thread>
 
 const uint32_t KDefaultFPS = 10;
+const uint32_t KThreadCaptureMessage = WM_USER+1;
 
 typedef struct tagAppContext
 {
@@ -15,10 +16,12 @@ typedef struct tagAppContext
         UINT timerID;
         UINT_PTR timerInst;
         uint32_t fps;
+
+        bool bRunning;
+        std::thread capThread;
     }timer;
 
     struct {
-        std::thread capThread;
         std::unique_ptr<CCapture> host;
 
         HWND winID;

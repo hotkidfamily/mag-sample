@@ -94,6 +94,7 @@ BEGIN_MESSAGE_MAP(CmymagsampleDlg, CDialogEx)
     //ON_MESSAGE(WM_SESSIONCHANGE, &CmymagsampleDlg::OnDisplayChanged)
     ON_CBN_SELCHANGE(IDC_COMBO_WNDLIST, &CmymagsampleDlg::OnCbnSelchangeComboWndlist)
     ON_WM_SIZE()
+    ON_MESSAGE(KThreadCaptureMessage, OnUserDefinedMessage)
     END_MESSAGE_MAP()
 
 
@@ -229,6 +230,21 @@ LRESULT CmymagsampleDlg::OnDisplayChanged(WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+LRESULT CmymagsampleDlg::OnUserDefinedMessage(WPARAM wParam, LPARAM lParam)
+{
+    auto &timer = _appContext->timer;
+    auto &capturer = _appContext->capturer;
+
+    if (timer.timerID == TIMER_SCREEN_CAPTURE) {
+        DesktopRect rect = capturer.rect;
+        capturer.host->setExcludeWindows(GetSafeHwnd());
+        if (capturer.host.get())
+            capturer.host->captureImage(rect);
+    }
+
+    return 1;
+}
+
 void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
 {
     auto &capturer = _appContext->capturer;
@@ -288,6 +304,25 @@ void CmymagsampleDlg::OnBnClickedButtonFindwind()
     _wndListCombobox.SetCurSel(curSel);
 }
 
+void captureThread(CmymagsampleDlg *args)
+{
+    CmymagsampleDlg *pthis = (CmymagsampleDlg *)args;
+    pthis->CaptureThread();
+}
+
+void CmymagsampleDlg::CaptureThread()
+{
+    auto &timer = _appContext->timer;
+    while (timer.bRunning) {
+        std::chrono::steady_clock::time_point start = std::chrono::high_resolution_clock::now();
+        SendMessage(KThreadCaptureMessage, 0, 0);
+        std::chrono::steady_clock::time_point end = std::chrono::high_resolution_clock::now();
+        auto interval = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        if (interval.count() >= 1000 / timer.fps)
+            continue;
+        Sleep((1000 / timer.fps - interval.count()));
+    }
+}
 
 void CmymagsampleDlg::OnBnClickedBtnWndcap()
 {
@@ -325,28 +360,36 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
 
     timer.fps = KDefaultFPS;
     timer.timerID = TIMER_WINDOW_CAPTURE;
-    timer.timerInst = SetTimer(timer.timerID, 1000 / timer.fps, NULL);
+
+    if (capturer.host->usingTimer()) {
+        timer.timerInst = SetTimer(timer.timerID, 1000 / timer.fps, NULL);
+    }
+    else
+    {
+        timer.bRunning = true;
+        timer.capThread = std::thread(captureThread, this);
+    }
 }
 
 void CmymagsampleDlg::OnBnClickedBtnScreencap()
 {
     auto &timer = _appContext->timer;
-    auto &capture = _appContext->capturer;
+    auto &capturer = _appContext->capturer;
     auto &render = _appContext->render;
 
     OnBnClickedBtnStop();
 
-    capture.screenID = MonitorFromWindow(GetSafeHwnd(), MONITOR_DEFAULTTONEAREST);
-    CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(capture.screenID);
-    capture.rect = DesktopRect::MakeRECT(settings.rect());
+    capturer.screenID = MonitorFromWindow(GetSafeHwnd(), MONITOR_DEFAULTTONEAREST);
+    CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(capturer.screenID);
+    capturer.rect = DesktopRect::MakeRECT(settings.rect());
 
-    capture.winID = 0;
-    capture.host.reset(new DXGICapture());
-    capture.host->setCallback(CaptureCallback, this);
-    if (!capture.host->startCaptureScreen(capture.screenID)) {
-        capture.host.reset(new GDICapture());
-        capture.host->setCallback(CaptureCallback, this);
-        if (!capture.host->startCaptureScreen(capture.screenID)) {
+    capturer.winID = 0;
+    capturer.host.reset(new DXGICapture());
+    capturer.host->setCallback(CaptureCallback, this);
+    if (!capturer.host->startCaptureScreen(capturer.screenID)) {
+        capturer.host.reset(new GDICapture());
+        capturer.host->setCallback(CaptureCallback, this);
+        if (!capturer.host->startCaptureScreen(capturer.screenID)) {
             FlashWindowEx(FLASHW_ALL, 3, 300);
             return;
         }
@@ -361,7 +404,14 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
 
     timer.fps = 120;
     timer.timerID = TIMER_SCREEN_CAPTURE;
-    timer.timerInst = SetTimer(timer.timerID, 1000 / timer.fps, NULL);
+
+    if (capturer.host->usingTimer()) {
+        timer.timerInst = SetTimer(timer.timerID, 1000 / timer.fps, NULL);
+    }
+    else {
+        timer.bRunning = true;
+        timer.capThread = std::thread(captureThread, this);
+    }
 }
 
 
@@ -371,9 +421,15 @@ void CmymagsampleDlg::OnBnClickedBtnStop()
     auto &capture = _appContext->capturer;
     auto &render = _appContext->render;
 
+    timer.bRunning = false;
+
     if (timer.timerInst) {
         KillTimer(timer.timerID);
         timer.timerInst = 0;
+    }
+
+    if (timer.capThread.joinable()) {
+        timer.capThread.join();
     }
 
     if (capture.host.get())

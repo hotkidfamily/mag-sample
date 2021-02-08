@@ -17,6 +17,7 @@ class GDICapture : public CCapture {
     virtual bool setExcludeWindows(HWND hWnd) override;
     virtual bool setExcludeWindows(std::vector<HWND> hWnd) override;
     virtual const char *getName() override;
+    virtual bool usingTimer() override;
 
   public:
     bool onCaptured(void *srcdata, BITMAPINFOHEADER& srcheader);

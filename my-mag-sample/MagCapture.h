@@ -25,8 +25,9 @@ public:
     virtual bool setExcludeWindows(HWND hWnd) override;
     virtual bool setExcludeWindows(std::vector<HWND> hWnd) override;
     virtual const char *getName() override;
+    virtual bool usingTimer() override;
 
-public:
+  public:
 
 #if USING_GDI_CAPTURE
     bool onCaptured(void *srcdata, BITMAPINFOHEADER &header);
