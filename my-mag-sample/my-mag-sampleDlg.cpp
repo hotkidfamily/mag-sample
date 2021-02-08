@@ -201,7 +201,7 @@ void CaptureCallback(VideoFrame *frame, void *args)
 
 LRESULT CmymagsampleDlg::OnDPIChanged(WPARAM wParam, LPARAM lParam)
 {
-    auto &capturer = _appContext->host;
+    auto &capturer = _appContext->capturer;
 
     long dpi = LOWORD(wParam);
     RECT newRect = *(reinterpret_cast<const RECT *>(lParam));
@@ -212,7 +212,7 @@ LRESULT CmymagsampleDlg::OnDPIChanged(WPARAM wParam, LPARAM lParam)
 LRESULT CmymagsampleDlg::OnDisplayChanged(WPARAM wParam, LPARAM lParam)
 {
     lParam = lParam;
-    auto &capturer = _appContext->host;
+    auto &capturer = _appContext->capturer;
 
     capturer.rect.set_width(LOWORD(lParam));
     capturer.rect.set_width(HIWORD(lParam));
@@ -231,7 +231,7 @@ LRESULT CmymagsampleDlg::OnDisplayChanged(WPARAM wParam, LPARAM lParam)
 
 void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
 {
-    auto &capturer = _appContext->host;
+    auto &capturer = _appContext->capturer;
 
     if (TIMER_WINDOW_CAPTURE == nIDEvent) {
         RECT wRect;
@@ -269,7 +269,7 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
 void CmymagsampleDlg::OnBnClickedButtonFindwind()
 {
     int curSel = 0;
-    auto &capturer = _appContext->host;
+    auto &capturer = _appContext->capturer;
 
     _wndListCombobox.ResetContent();
     _wndList.clear();
@@ -292,7 +292,7 @@ void CmymagsampleDlg::OnBnClickedButtonFindwind()
 void CmymagsampleDlg::OnBnClickedBtnWndcap()
 {
     auto &timer = _appContext->timer;
-    auto &capturer = _appContext->host;
+    auto &capturer = _appContext->capturer;
     auto &render = _appContext->render;
 
     OnBnClickedBtnStop();
@@ -331,7 +331,7 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
 void CmymagsampleDlg::OnBnClickedBtnScreencap()
 {
     auto &timer = _appContext->timer;
-    auto &capture = _appContext->host;
+    auto &capture = _appContext->capturer;
     auto &render = _appContext->render;
 
     OnBnClickedBtnStop();
@@ -359,7 +359,7 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     render.render->init(_previewWnd.GetSafeHwnd());
     render.render->setMode(2);
 
-    timer.fps = 60;
+    timer.fps = 120;
     timer.timerID = TIMER_SCREEN_CAPTURE;
     timer.timerInst = SetTimer(timer.timerID, 1000 / timer.fps, NULL);
 }
@@ -368,7 +368,7 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
 void CmymagsampleDlg::OnBnClickedBtnStop()
 {
     auto &timer = _appContext->timer;
-    auto &capture = _appContext->host;
+    auto &capture = _appContext->capturer;
     auto &render = _appContext->render;
 
     if (timer.timerInst) {

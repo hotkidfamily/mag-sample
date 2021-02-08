@@ -5,6 +5,7 @@
 #include "d3drender.h"
 
 #include <vector>
+#include <thread>
 
 const uint32_t KDefaultFPS = 10;
 
@@ -17,13 +18,14 @@ typedef struct tagAppContext
     }timer;
 
     struct {
+        std::thread capThread;
         std::unique_ptr<CCapture> host;
 
         HWND winID;
         HMONITOR screenID;
 
         DesktopRect rect;
-    }host;
+    }capturer;
 
     struct
     {

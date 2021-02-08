@@ -712,11 +712,44 @@ HRESULT  d3drender::display(const VideoFrame &frame)
         }
 
         {
-            auto interval = std::chrono::duration_cast<std::chrono::milliseconds>(curNono - _lastRenderTimeMs);
+            double frameInterval = 1.0f;
+            double frameCost = 1.0f;
+            if (_lastRenderTimeMs.time_since_epoch().count() != 0) {
+
+                auto interval = std::chrono::duration_cast<std::chrono::milliseconds>(curNono - _lastRenderTimeMs);
+                _renderIntervalList.push_back({ std::chrono::high_resolution_clock::now(), interval.count() });
+
+                {
+                    auto sampleCount = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        _renderIntervalList.back().timeStamp - _renderIntervalList.front().timeStamp);
+
+                    do {
+                        if (sampleCount.count() <= 5000) {
+                            break;
+                        }
+
+                        _renderIntervalList.pop_front();
+
+                        sampleCount = std::chrono::duration_cast<std::chrono::milliseconds>(
+                            _renderIntervalList.front().timeStamp - _renderIntervalList.back().timeStamp);
+                    } while (1);
+
+                    auto size = _renderIntervalList.size();
+                    frameInterval = size * 1000.0f / sampleCount.count();
+
+                    size = 0;
+                    for (auto e : _renderIntervalList) {
+                        size += e.value;
+                    }
+                    frameCost = size * 1.0f/ _renderIntervalList.size();
+                }
+            }
+            
             CRect cltRect;
             GetClientRect(_hwnd, &cltRect);
-            HR_CHECK(_drawInfo(NULL, cltRect, _T("F: %dx%d W:%dx%d Fmt:%d P:%d, C:%d"), 
-                frameSize.cx, frameSize.cy, wndRect.Width(), wndRect.Height(), fmtType, 1000/interval.count(), _lastRenderCostMs));
+            HR_CHECK(_drawInfo(NULL, cltRect, _T("F: %dx%d W:%dx%d Fmt:%d P:%8.4f, C:%f"), 
+                frameSize.cx, frameSize.cy,
+                               wndRect.Width(), wndRect.Height(), fmtType, frameInterval, frameCost));
         }
 
         HR_CHECK(_device->EndScene());
@@ -733,7 +766,6 @@ HRESULT  d3drender::display(const VideoFrame &frame)
             }
         }
         _lastRenderTimeMs = curNono;
-        _lastRenderCostMs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - curNono);
     }
 
     return S_OK;

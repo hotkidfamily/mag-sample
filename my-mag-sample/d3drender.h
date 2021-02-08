@@ -3,9 +3,16 @@
 #include <d3dx9.h>
 #include <DxErr.h>
 
+#include <list>
 #include <chrono>
 
 #include "VideoFrame.h"
+
+typedef struct tagSample
+{
+    std::chrono::steady_clock::time_point timeStamp;
+    int64_t value;
+}Sample;
 
 
 class d3drender
@@ -60,6 +67,7 @@ private:
     
     CComPtr<ID3DXFont> _printer = nullptr;
 
-    std::chrono::steady_clock::time_point _lastRenderTimeMs;
-    std::chrono::milliseconds _lastRenderCostMs;
+    std::chrono::steady_clock::time_point _lastRenderTimeMs = {};
+
+     std::list<Sample> _renderIntervalList;
 };
