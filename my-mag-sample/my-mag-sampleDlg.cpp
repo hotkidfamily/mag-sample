@@ -8,6 +8,7 @@
 #include "CapUtility.h"
 #include "MagCapture.h"
 #include "GDICapture.h"
+#include "DXGICapture.h"
 
 #include "my-mag-sample.h"
 #include "my-mag-sampleDlg.h"
@@ -340,7 +341,7 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     capture.rect = DesktopRect::MakeRECT(settings.rect());
 
     capture.winID = 0;
-    capture.host.reset(new MagCapture());
+    capture.host.reset(new DXGICapture());
     capture.host->setCallback(CaptureCallback, this);
     if (!capture.host->startCaptureScreen(capture.screenID)) {
         capture.host.reset(new GDICapture());
@@ -358,7 +359,7 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     render.render->init(_previewWnd.GetSafeHwnd());
     render.render->setMode(2);
 
-    timer.fps = KDefaultFPS;
+    timer.fps = 60;
     timer.timerID = TIMER_SCREEN_CAPTURE;
     timer.timerInst = SetTimer(timer.timerID, 1000 / timer.fps, NULL);
 }
