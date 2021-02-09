@@ -10,7 +10,9 @@
 
 using namespace Microsoft::WRL;
 
-typedef HRESULT(WINAPI *funcD3D11CreateDevice)(__in_opt IDXGIAdapter *pAdapter,
+typedef HRESULT (WINAPI *pfCreateDXGIFactory1)(REFIID riid, _COM_Outptr_ void **ppFactory);
+
+typedef HRESULT (WINAPI *pfD3D11CreateDevice)(__in_opt IDXGIAdapter *pAdapter,
                                              D3D_DRIVER_TYPE DriverType,
                                              HMODULE Software,
                                              UINT Flags,
@@ -60,5 +62,6 @@ class DXGICapture : public CCapture {
     funcCaptureCallback _callback = nullptr;
     void *_callbackargs = nullptr;
 
-    funcD3D11CreateDevice fnD3D11CreateDevice;
+    pfD3D11CreateDevice fnD3D11CreateDevice;
+    pfCreateDXGIFactory1 fnCreateDXGIFactory1;
 };

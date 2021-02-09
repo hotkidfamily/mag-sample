@@ -20,10 +20,15 @@ bool DXGICapture::_loadD3D11()
 
     HMODULE hm = LoadLibraryW(L"D3D11.dll");
     if (hm) {
-        fnD3D11CreateDevice = reinterpret_cast<funcD3D11CreateDevice>(GetProcAddress(hm, "D3D11CreateDevice"));
+        fnD3D11CreateDevice = reinterpret_cast<pfD3D11CreateDevice>(GetProcAddress(hm, "D3D11CreateDevice"));
     }
 
-    bRet = !!hm && !!fnD3D11CreateDevice;
+    HMODULE hm2 = LoadLibraryW(L"DXGI.dll");
+    if (hm2) {
+        fnCreateDXGIFactory1 = reinterpret_cast<pfCreateDXGIFactory1>(GetProcAddress(hm2, "CreateDXGIFactory1"));
+    }
+
+    bRet = !!hm && !!fnD3D11CreateDevice && !!hm2 && !! fnCreateDXGIFactory1;
 
     return bRet;
 }
@@ -40,10 +45,39 @@ bool DXGICapture::_init(HMONITOR &hm)
             break;
         }
 
+        ComPtr<IDXGIFactory1> factory;
+        HRESULT err = fnCreateDXGIFactory1(__uuidof(IDXGIFactory1), (void **)&factory);
+        ComPtr<IDXGIAdapter1> hDxgiAdapter = NULL;
+        UINT n = 0;
+        bool bFound = false;
+        ComPtr<IDXGIOutput> hDxgiOutput = NULL;
+        while (factory->EnumAdapters1(n, &hDxgiAdapter) == S_OK) {
+            UINT nOutput = 0;
+            do {
+                hr = hDxgiAdapter->EnumOutputs(nOutput, &hDxgiOutput);
+                if (hr == DXGI_ERROR_NOT_FOUND) {
+                    break;
+                }
+
+                DXGI_OUTPUT_DESC eDesc = {};
+                hDxgiOutput->GetDesc(&eDesc);
+                if (eDesc.Monitor == hm) {
+                    bFound = true;
+                    break;
+                }
+                ++nOutput;
+            } while (SUCCEEDED(hr));
+
+            if (bFound) {
+                break;
+            }
+            n++;
+        }
+
         D3D_DRIVER_TYPE DriverTypes[] = {
+            D3D_DRIVER_TYPE_UNKNOWN,
             D3D_DRIVER_TYPE_HARDWARE,
-            D3D_DRIVER_TYPE_WARP,
-            D3D_DRIVER_TYPE_REFERENCE,
+            D3D_DRIVER_TYPE_WARP, D3D_DRIVER_TYPE_REFERENCE, D3D_DRIVER_TYPE_SOFTWARE,
         };
         UINT NumDriverTypes = ARRAYSIZE(DriverTypes);
 
@@ -54,45 +88,12 @@ bool DXGICapture::_init(HMONITOR &hm)
         D3D_FEATURE_LEVEL FeatureLevel;
 
         for (UINT DriverTypeIndex = 0; DriverTypeIndex < NumDriverTypes; ++DriverTypeIndex) {
-            hr = fnD3D11CreateDevice(NULL, DriverTypes[DriverTypeIndex], NULL, 0, FeatureLevels, NumFeatureLevels,
-                                   D3D11_SDK_VERSION, &_device, &FeatureLevel, &_deviceContext);
+            hr = fnD3D11CreateDevice(hDxgiAdapter.Get(), DriverTypes[DriverTypeIndex], NULL, 0, FeatureLevels,
+                                     NumFeatureLevels, D3D11_SDK_VERSION, &_device, &FeatureLevel, &_deviceContext);
             if (SUCCEEDED(hr)) {
                 break;
             }
         }
-        if (FAILED(hr)) {
-            break;
-        }
-
-        ComPtr<IDXGIDevice> hDxgiDevice = NULL;
-        hr = _device->QueryInterface(__uuidof(IDXGIDevice), &hDxgiDevice);
-        if (FAILED(hr)) {
-            break;
-        }
-
-        ComPtr<IDXGIAdapter> hDxgiAdapter = NULL;
-        hr = hDxgiDevice->GetParent(__uuidof(IDXGIAdapter), &hDxgiAdapter);
-        if (FAILED(hr)) {
-            break;
-        }
-
-        INT nOutput = 0;
-        int count = 0;
-        IDXGIOutput *hDxgiOutput = NULL;
-        do {
-            hr = hDxgiAdapter->EnumOutputs(nOutput, &hDxgiOutput);
-            if (hr == DXGI_ERROR_NOT_FOUND) {
-                break;
-            }
-
-            DXGI_OUTPUT_DESC eDesc = {};
-            hDxgiOutput->GetDesc(&eDesc);
-            if (eDesc.Monitor == hm){
-                break;
-            }
-            ++nOutput;
-        } while (SUCCEEDED(hr));
-
         if (FAILED(hr)) {
             break;
         }
