@@ -209,20 +209,23 @@ bool DXGICapture::captureImage(const DesktopRect &rect)
         return FALSE;
     }
 
-    D3D11_TEXTURE2D_DESC fDesc;
+    D3D11_TEXTURE2D_DESC fDesc = {0};
     hAcquiredDesktopImage->GetDesc(&fDesc);
-    ComPtr<ID3D11Texture2D> hNewDesktopImage2 = NULL;
-    fDesc.Usage = D3D11_USAGE_STAGING;
-    fDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-    fDesc.BindFlags = 0;
-    fDesc.MiscFlags = 0;
-    fDesc.MipLevels = 1;
-    fDesc.ArraySize = 1;
-    fDesc.SampleDesc.Count = 1;
-    hr = _device->CreateTexture2D(&fDesc, NULL, &hNewDesktopImage2);
-    if (FAILED(hr)) {
-        _desktopDuplication->ReleaseFrame();
-        return FALSE;
+    if (memcmp(&_sourceFormat, &fDesc, sizeof(D3D11_TEXTURE2D_DESC)) != 0) {
+        _sourceFormat = fDesc;
+        ComPtr<ID3D11Texture2D> hNewDesktopImage2 = NULL;
+        fDesc.Usage = D3D11_USAGE_STAGING;
+        fDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+        fDesc.BindFlags = 0;
+        fDesc.MiscFlags = 0;
+        fDesc.MipLevels = 1;
+        fDesc.ArraySize = 1;
+        fDesc.SampleDesc.Count = 1;
+        hr = _device->CreateTexture2D(&fDesc, NULL, &_destFrame);
+        if (FAILED(hr)) {
+            _desktopDuplication->ReleaseFrame();
+            return FALSE;
+        }
     }
 #if 0 // draw cursor info
     hAcquiredDesktopImage->GetDesc(&fDesc);
@@ -268,14 +271,14 @@ bool DXGICapture::captureImage(const DesktopRect &rect)
         }
     }
 
-    _deviceContext->CopyResource(hNewDesktopImage2.Get(), hNewDesktopImage.Get());
+    _deviceContext->CopyResource(_destFrame.Get(), hNewDesktopImage.Get());
 #else
-    _deviceContext->CopyResource(hNewDesktopImage2.Get(), hAcquiredDesktopImage.Get());
+    _deviceContext->CopyResource(_destFrame.Get(), hAcquiredDesktopImage.Get());
     _desktopDuplication->ReleaseFrame();
 #endif
 
     ComPtr<IDXGISurface1> hStagingSurf = NULL;
-    hr = hNewDesktopImage2->QueryInterface(__uuidof(IDXGISurface1), &hStagingSurf);
+    hr = _destFrame->QueryInterface(__uuidof(IDXGISurface1), &hStagingSurf);
     if (FAILED(hr)) {
         return FALSE;
     }
@@ -306,13 +309,17 @@ bool DXGICapture::setCallback(funcCaptureCallback fcb, void *args)
 bool DXGICapture::setExcludeWindows(HWND hWnd)
 {
     bool bRet = true;
-
+    _coverdWindows.clear();
+    _coverdWindows.push_back(hWnd);
     return bRet;
 }
 
 bool DXGICapture::setExcludeWindows(std::vector<HWND> hWnd)
 {
-    bool bRet = false;
+    bool bRet = true;
+
+    _coverdWindows = std::move(hWnd);
+
     return bRet;
 }
 

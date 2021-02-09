@@ -55,6 +55,9 @@ class DXGICapture : public CCapture {
     ComPtr<IDXGIOutputDuplication> _desktopDuplication = nullptr;
     DXGI_OUTPUT_DESC _outputDesc = {};
 
+    D3D11_TEXTURE2D_DESC _sourceFormat;
+    ComPtr<ID3D11Texture2D> _destFrame;
+
     std::unique_ptr<VideoFrame> _frames;
     DesktopRect _lastRect = {};
 
@@ -64,4 +67,6 @@ class DXGICapture : public CCapture {
 
     pfD3D11CreateDevice fnD3D11CreateDevice;
     pfCreateDXGIFactory1 fnCreateDXGIFactory1;
+
+    std::vector<HWND> _coverdWindows;
 };
