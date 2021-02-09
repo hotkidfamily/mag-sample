@@ -744,7 +744,7 @@ HRESULT  d3drender::display(const VideoFrame &frame)
             
             CRect cltRect;
             GetClientRect(_hwnd, &cltRect);
-            HR_CHECK(_drawInfo(NULL, cltRect, _T("F: %dx%d W:%dx%d Fmt:%d P:%8.4f, C:%f"), 
+            HR_CHECK(_drawInfo(NULL, cltRect, _T("F: %dx%d W:%dx%d Fmt:%d P:%8.2f, C:%.2f"), 
                 frameSize.cx, frameSize.cy,
                                wndRect.Width(), wndRect.Height(), fmtType, frameInterval, frameCost));
         }
