@@ -1,6 +1,7 @@
-#include "stdafx.h"
+#include "pch.h"
 
 #include <VersionHelpers.h>
+#include <dwmapi.h>
 
 #include "DesktopRect.h"
 #include "MagCapture.h"

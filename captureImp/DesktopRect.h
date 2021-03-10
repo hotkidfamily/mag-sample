@@ -127,7 +127,7 @@ public:
     #ifdef min
     #undef min
     #undef max
-    void DesktopRect::IntersectWith(const DesktopRect &rect)
+    void IntersectWith(const DesktopRect &rect)
     {
         left_ = std::max(left(), rect.left());
         top_ = std::max(top(), rect.top());

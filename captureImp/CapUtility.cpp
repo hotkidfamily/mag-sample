@@ -1,9 +1,12 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "CapUtility.h"
 
 #include <shellscalingapi.h>
 #include <set>
 #include <versionhelpers.h>
+#include <dwmapi.h>
+
+#pragma comment(lib, "dwmapi")
 
 namespace CapUtility
 {

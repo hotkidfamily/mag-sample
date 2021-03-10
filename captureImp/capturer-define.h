@@ -27,3 +27,6 @@ class CCapture
     virtual bool usingTimer() = 0;
 
 };
+
+
+__declspec(dllexport) bool CAPIMP_CreateCapture(CCapture *&capture);

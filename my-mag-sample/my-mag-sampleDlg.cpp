@@ -6,9 +6,7 @@
 
 #include "Win32WindowEnumeration.h"
 #include "CapUtility.h"
-#include "MagCapture.h"
-#include "GDICapture.h"
-#include "DXGICapture.h"
+#include "capturer-define.h"
 
 #include "my-mag-sample.h"
 #include "my-mag-sampleDlg.h"
@@ -19,6 +17,8 @@
 
 #include <dwmapi.h>
 #pragma comment(lib, "dwmapi.lib")
+
+#pragma comment(lib, "captureImp.lib")
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -340,16 +340,14 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
         return;
     }
     capturer.screenID = nullptr;
-    capturer.host.reset(new GDICapture());
-    capturer.host->setCallback(CaptureCallback, this);
-    if (!capturer.host->startCaptureWindow(capturer.winID)) {
-        capturer.host.reset(new MagCapture());
-        capturer.host->setCallback(CaptureCallback, this);
-        if (!capturer.host->startCaptureWindow(capturer.winID)) {
-            FlashWindowEx(FLASHW_ALL, 3, 300);
-            return;
-        }
+    CCapture *Cap = nullptr;
+    if (!CAPIMP_CreateCapture(Cap)) {
+        FlashWindowEx(FLASHW_ALL, 3, 300);
+        return;
     }
+    capturer.host.reset(Cap);
+    capturer.host->startCaptureWindow(capturer.winID);
+    capturer.host->setCallback(CaptureCallback, this);
     capturer.host->setExcludeWindows(GetSafeHwnd());
     
     if (render.render) {
@@ -385,16 +383,16 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     capturer.rect = DesktopRect::MakeRECT(settings.rect());
 
     capturer.winID = 0;
-    capturer.host.reset(new DXGICapture());
-    capturer.host->setCallback(CaptureCallback, this);
-    if (!capturer.host->startCaptureScreen(capturer.screenID)) {
-        capturer.host.reset(new GDICapture());
-        capturer.host->setCallback(CaptureCallback, this);
-        if (!capturer.host->startCaptureScreen(capturer.screenID)) {
-            FlashWindowEx(FLASHW_ALL, 3, 300);
-            return;
-        }
+    CCapture *Cap = nullptr;
+    if (!CAPIMP_CreateCapture(Cap)) {
+        FlashWindowEx(FLASHW_ALL, 3, 300);
+        return;
     }
+
+    capturer.host.reset(Cap);
+    capturer.host->startCaptureScreen(capturer.screenID);
+    capturer.host->setCallback(CaptureCallback, this);
+    capturer.host->setExcludeWindows(GetSafeHwnd());
 
     if (render.render) {
         render.render.reset(nullptr);

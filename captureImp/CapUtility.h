@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-namespace CapUtility 
+namespace CapUtility
 {
 
 struct DisplaySetting
@@ -38,16 +38,16 @@ struct DisplaySetting
 const int kDesktopCaptureBPP = 4;
 const int kDesktopCaptureDefaultDPI = USER_DEFAULT_SCREEN_DPI;
 
-std::vector<HWND> getWindowsCovered(HWND hwnd);
-BOOL isWndCanCap(HWND hWnd);
+__declspec(dllexport) std::vector<HWND> getWindowsCovered(HWND hwnd);
+__declspec(dllexport) BOOL isWndCanCap(HWND hWnd);
 
-DisplaySetting enumDisplaySettingByName(std::wstring &name);
-DisplaySetting enumDisplaySettingByMonitor(HMONITOR hMonitor);
-bool getMaxResolutionInSystem(int32_t *cx, int32_t *cy);
-LRESULT GetPrimeryWindowsRect(RECT &rect);
+__declspec(dllexport) DisplaySetting enumDisplaySettingByName(std::wstring &name);
+__declspec(dllexport) DisplaySetting enumDisplaySettingByMonitor(HMONITOR hMonitor);
+__declspec(dllexport) bool getMaxResolutionInSystem(int32_t *cx, int32_t *cy);
+__declspec(dllexport) LRESULT GetPrimeryWindowsRect(RECT &rect);
 
-BOOL GetWindowRect(HWND hWnd, RECT &rect);
+__declspec(dllexport) BOOL GetWindowRect(HWND hWnd, RECT &rect);
 
-int CaptureAnImage(HWND hWnd, std::wstring &path);
+__declspec(dllexport) int CaptureAnImage(HWND hWnd, std::wstring &path);
 };
     
