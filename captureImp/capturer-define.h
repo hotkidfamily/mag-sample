@@ -8,7 +8,6 @@
 
 typedef void (*funcCaptureCallback)(CAPIMP::VideoFrame *frame, void *args);
 
-
 class CCapture 
 {
   public:
@@ -25,8 +24,28 @@ class CCapture
     virtual bool setExcludeWindows(std::vector<HWND> hWnd) = 0;
     virtual const char *getName() = 0;
     virtual bool usingTimer() = 0;
-
 };
 
 
-__declspec(dllexport) bool CAPIMP_CreateCapture(CCapture *&capture);
+class CapOptions
+{
+  public:
+    bool enableWindowFilter() const
+    {
+        return _usingWindowFilter;
+    }
+
+  private:
+    bool _usingMagnificationAPI = false;
+    bool _usingDXGIAPI = false;
+
+    bool _detectPowerwPoint = false;
+    bool _enableAero = false;
+
+    bool _usingWindowFilter = false;
+    bool _usingTextureCallback = false;
+
+    bool _bDesktopCapture = false;
+};
+
+__declspec(dllexport) bool CAPIMP_CreateCapture(CCapture *&capture, CapOptions &option);

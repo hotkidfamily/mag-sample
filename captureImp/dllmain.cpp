@@ -58,22 +58,34 @@ int64_t queryWin10ReleaseID()
     return releaseID;
 }
 
-bool CAPIMP_CreateCapture(CCapture *&capture)
+bool CAPIMP_CreateCapture(CCapture *&capture, CapOptions &option)
 {
-    
     CCapture *Cap = nullptr; 
-    if (IsWindows10OrGreater()) {
-        if (queryWin10ReleaseID() > 1809) {
-            //Cap = new WRLCapture();
+    if (option.enableWindowFilter()) {
+        if (IsWindows7OrGreater()) {
+            Cap = new MagCapture();
         }
-        Cap = new DXGICapture();
-    }
-    else if (IsWindows7OrGreater()) {
-        Cap = new MagCapture();
+        else {
+            Cap = new GDICapture();
+        }
     }
     else {
-        Cap = new GDICapture();
+        if (IsWindows8OrGreater()) {
+            if (IsWindows10OrGreater() && (queryWin10ReleaseID() > 1904)) {
+                Cap = new DXGICapture();
+            }
+            else {
+                Cap = new DXGICapture();
+            }
+        }
+        else if(IsWindows7OrGreater()){
+            Cap = new MagCapture();
+        }
+        else {
+            Cap = new GDICapture();
+        }
     }
+
 
     capture = Cap;
 

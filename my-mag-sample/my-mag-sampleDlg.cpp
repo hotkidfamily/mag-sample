@@ -345,7 +345,8 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
     }
     capturer.screenID = nullptr;
     CCapture *Cap = nullptr;
-    if (!CAPIMP_CreateCapture(Cap)) {
+    CapOptions option;
+    if (!CAPIMP_CreateCapture(Cap, option)) {
         FlashWindowEx(FLASHW_ALL, 3, 300);
         return;
     }
@@ -388,7 +389,9 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
 
     capturer.winID = 0;
     CCapture *Cap = nullptr;
-    if (!CAPIMP_CreateCapture(Cap)) {
+    CapOptions option;
+
+    if (!CAPIMP_CreateCapture(Cap, option)) {
         FlashWindowEx(FLASHW_ALL, 3, 300);
         return;
     }

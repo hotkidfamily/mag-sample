@@ -293,9 +293,10 @@ bool DXGICapture::captureImage(const DesktopRect &rect)
     _deviceContext->CopyResource(_destFrame.Get(), hAcquiredDesktopImage.Get());
     _desktopDuplication->ReleaseFrame();
 #endif
-    onCaptured(_destFrame.Get());
 
 #if 0
+    onCaptured(_destFrame.Get());
+#else
     ComPtr<IDXGISurface1> hStagingSurf = NULL;
     hr = _destFrame->QueryInterface(__uuidof(IDXGISurface1), &hStagingSurf);
     if (FAILED(hr)) {
