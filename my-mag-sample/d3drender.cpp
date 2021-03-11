@@ -295,7 +295,7 @@ HRESULT d3drender::_resetDevice(CRect &wndRect)
     return hRet;
 }
 
-HRESULT d3drender::_compile_sharder(VideoFrame::VideoFrameType type)
+HRESULT d3drender::_compile_sharder(CAPIMP::VideoFrame::VideoFrameType type)
 {
     HRESULT hRet = S_OK;
 
@@ -308,12 +308,12 @@ HRESULT d3drender::_compile_sharder(VideoFrame::VideoFrameType type)
     _psCT.Release();
 
     switch (type) {
-    case VideoFrame::VideoFrameType::kVideoFrameTypeI420:
+    case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeI420:
         {
             hRet = compile_shader(_device, NULL, NULL, NULL, NULL, yuv2rgb, &_Ps, &_psCT, ps_profile);
         }
         break;
-    case VideoFrame::VideoFrameType::kVideoFrameTypeNV12:
+        case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeNV12:
         {
             hRet = compile_shader(_device, NULL, NULL, NULL, NULL, NV122rgb, &_Ps, &_psCT, ps_profile);
         }
@@ -323,7 +323,7 @@ HRESULT d3drender::_compile_sharder(VideoFrame::VideoFrameType type)
     return hRet;
 }
 
-HRESULT d3drender::_setupVertex(VideoFrame::VideoFrameType type)
+HRESULT d3drender::_setupVertex(CAPIMP::VideoFrame::VideoFrameType type)
 {
     HRESULT hRet = S_OK;
 
@@ -349,7 +349,7 @@ HRESULT d3drender::_setupVertex(VideoFrame::VideoFrameType type)
     return S_OK;
 }
 
-HRESULT d3drender::_reallocTexture(CSize destBufSize, VideoFrame::VideoFrameType destBufFormat)
+HRESULT d3drender::_reallocTexture(CSize destBufSize, CAPIMP::VideoFrame::VideoFrameType destBufFormat)
 {
     HRESULT hRet = S_OK;
     auto &width = destBufSize.cx;
@@ -365,7 +365,7 @@ HRESULT d3drender::_reallocTexture(CSize destBufSize, VideoFrame::VideoFrameType
 
     switch (destBufFormat)
     {
-    case VideoFrame::VideoFrameType::kVideoFrameTypeI420:
+    case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeI420:
         {
             if (SUCCEEDED(hRet)) {
                 hRet = _device->CreateTexture(width, height, 1, D3DUSAGE_DYNAMIC, D3DFMT_L8, D3DPOOL_DEFAULT, &_ytexture, NULL);
@@ -418,7 +418,7 @@ HRESULT d3drender::_reallocTexture(CSize destBufSize, VideoFrame::VideoFrameType
         }
 
         break;
-        case VideoFrame::VideoFrameType::kVideoFrameTypeNV12:
+        case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeNV12:
         {
             hRet = _device->CreateTexture(width, height, 1, D3DUSAGE_DYNAMIC, D3DFMT_L8, D3DPOOL_DEFAULT, &_ytexture, NULL);
 
@@ -452,9 +452,9 @@ HRESULT d3drender::_reallocTexture(CSize destBufSize, VideoFrame::VideoFrameType
             }
         }
         break;
-    case VideoFrame::VideoFrameType::kVideoFrameTypeRGB24:
-    case VideoFrame::VideoFrameType::kVideoFrameTypeBGRA:
-    case VideoFrame::VideoFrameType::kVideoFrameTypeRGBA:
+        case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeRGB24:
+        case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeBGRA:
+        case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeRGBA:
         {
             hRet = _device->CreateTexture(width, height, 0, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &_ytexture, NULL);
         }
@@ -483,13 +483,13 @@ void fast_unpack(char* rgba, const char* rgb, const int count)
 }
 
 
-HRESULT d3drender::_copyToTexture(const VideoFrame &frame)
+HRESULT d3drender::_copyToTexture(const CAPIMP::VideoFrame &frame)
 {
     HRESULT hRet = S_OK;
 
     auto fmt = frame.type();
     switch (fmt) {
-    case VideoFrame::VideoFrameType::kVideoFrameTypeI420:
+    case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeI420:
         {
             D3DLOCKED_RECT rect;
             hRet = _ytexture->LockRect(0, &rect, 0, 0);
@@ -535,7 +535,7 @@ HRESULT d3drender::_copyToTexture(const VideoFrame &frame)
             _vtexture->UnlockRect(0);
         }
         break;
-        case VideoFrame::VideoFrameType::kVideoFrameTypeNV12:
+        case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeNV12:
         {
             D3DLOCKED_RECT rect;
             hRet = _ytexture->LockRect(0, &rect, 0, 0);
@@ -567,7 +567,7 @@ HRESULT d3drender::_copyToTexture(const VideoFrame &frame)
             _utexture->UnlockRect(0);
         }
         break;
-        case VideoFrame::VideoFrameType::kVideoFrameTypeRGB24:
+        case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeRGB24:
         {
             D3DLOCKED_RECT rect;
             hRet = _ytexture->LockRect(0, &rect, 0, 0);
@@ -586,8 +586,8 @@ HRESULT d3drender::_copyToTexture(const VideoFrame &frame)
             _ytexture->UnlockRect(0);
         }
         break;
-    case VideoFrame::VideoFrameType::kVideoFrameTypeBGRA:
-    case VideoFrame::VideoFrameType::kVideoFrameTypeRGBA:
+        case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeBGRA:
+        case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeRGBA:
         {
             D3DLOCKED_RECT rect;
             hRet = _ytexture->LockRect(0, &rect, 0, 0);
@@ -611,7 +611,7 @@ HRESULT d3drender::_copyToTexture(const VideoFrame &frame)
     return hRet;
 }
 
-HRESULT  d3drender::display(const VideoFrame &frame)
+HRESULT d3drender::display(const CAPIMP::VideoFrame &frame)
 {
     HRESULT hRet = S_OK;
 
@@ -673,8 +673,8 @@ HRESULT  d3drender::display(const VideoFrame &frame)
         HR_CHECK(_device->Clear(0, NULL, D3DCLEAR_TARGET, 0xFF000000, 1.0f, 0));
 
         switch (fmtType) {
-        case VideoFrame::VideoFrameType::kVideoFrameTypeI420:
-        case VideoFrame::VideoFrameType::kVideoFrameTypeNV12:
+        case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeI420:
+        case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeNV12:
             {
                 //_device->SetViewport(&_viewport);
 
@@ -685,10 +685,10 @@ HRESULT  d3drender::display(const VideoFrame &frame)
                 HR_CHECK(_device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2));
             }
             break;
-        case VideoFrame::VideoFrameType::kVideoFrameTypeRGB24:
-        //case VideoFrame::VideoFrameType::kVideoFrameType0BGR32:
-        case VideoFrame::VideoFrameType::kVideoFrameTypeBGRA:
-        case VideoFrame::VideoFrameType::kVideoFrameTypeRGBA:
+        case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeRGB24:
+        //case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameType0BGR32:
+        case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeBGRA:
+        case CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeRGBA:
             {
                // _device->SetViewport(&_viewport);
 
@@ -781,7 +781,7 @@ HRESULT d3drender::release()
     _printer.Release();
 
     _lastRect.SetRectEmpty();
-    _curPixType = VideoFrame::VideoFrameType::kVideoFrameTypeRGBA;
+    _curPixType = CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeRGBA;
     _curBuffSize.SetSize(0,0);
 
     return S_OK;

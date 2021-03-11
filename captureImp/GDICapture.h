@@ -29,7 +29,7 @@ class GDICapture : public CCapture {
     void *_hdstPtr = nullptr;
     BITMAPINFO bmi;
 
-    std::unique_ptr<VideoFrame> _frames;
+    std::unique_ptr<CAPIMP::VideoFrame> _frames;
     DesktopRect _lastRect;
 
     std::recursive_mutex _cbMutex;

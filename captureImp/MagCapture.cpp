@@ -221,7 +221,8 @@ bool MagCapture::onCaptured(void *srcdata, BITMAPINFOHEADER &header)
     int bpp = header.biBitCount >> 3; // bpp should be 4
     if (!_frames.get() || width != static_cast<UINT>(_frames->width()) || height != static_cast<UINT>(_frames->height())
         || stride != static_cast<UINT>(_frames->stride()) || bpp != CapUtility::kDesktopCaptureBPP) {
-        _frames.reset(VideoFrame::MakeFrame(width, height, stride, VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
+        _frames.reset(CAPIMP::VideoFrame::MakeFrame(width, height, stride,
+                                                    CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
     }
 
     {
@@ -273,8 +274,9 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
     if (!_frames.get() || header.format != GUID_WICPixelFormat32bppRGBA 
         || width != static_cast<UINT>(_frames->width()) || height != static_cast<UINT>(_frames->height())
         || stride != static_cast<UINT>(_frames->stride()) || bpp != CapUtility::kDesktopCaptureBPP) {
-        _frames.reset(VideoFrame::MakeFrame(width, height, stride,
-                                            VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
+        _frames.reset(
+            CAPIMP::VideoFrame::MakeFrame(width, height, stride,
+                                                    CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
     }
 
     {

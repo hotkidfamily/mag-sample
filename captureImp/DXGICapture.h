@@ -59,7 +59,7 @@ class DXGICapture : public CCapture {
     D3D11_TEXTURE2D_DESC _sourceFormat;
     ComPtr<ID3D11Texture2D> _destFrame;
 
-    std::unique_ptr<VideoFrame> _frames;
+    std::unique_ptr<CAPIMP::VideoFrame> _frames;
     DesktopRect _lastRect = {};
 
     std::recursive_mutex _cbMutex;

@@ -23,17 +23,17 @@ public:
 
     HRESULT init(HWND hwnd);
 
-    HRESULT display(const VideoFrame &frame);
+    HRESULT display(const CAPIMP::VideoFrame &frame);
 
     HRESULT release();
     
     HRESULT setMode(int mode) { _methodRender = mode; return S_OK; }
 
 protected:
-    HRESULT _compile_sharder(VideoFrame::VideoFrameType type);
-    HRESULT _setupVertex(VideoFrame::VideoFrameType type);
-    HRESULT _reallocTexture(CSize destBufSize, VideoFrame::VideoFrameType destBufFormat);
-    HRESULT _copyToTexture(const VideoFrame &frame);
+    HRESULT _compile_sharder(CAPIMP::VideoFrame::VideoFrameType type);
+    HRESULT _setupVertex(CAPIMP::VideoFrame::VideoFrameType type);
+    HRESULT _reallocTexture(CSize destBufSize, CAPIMP::VideoFrame::VideoFrameType destBufFormat);
+    HRESULT _copyToTexture(const CAPIMP::VideoFrame &frame);
     HRESULT _resetDevice(CRect &wndRect);
 
     HRESULT _drawInfo(HDC hdc, RECT *rc, TCHAR *format, ...);
@@ -41,7 +41,7 @@ protected:
 private:
     HWND _hwnd = nullptr;
     CRect _lastRect;
-    VideoFrame::VideoFrameType _curPixType = VideoFrame::VideoFrameType::kVideoFrameTypeRGBA;
+    CAPIMP::VideoFrame::VideoFrameType _curPixType = CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeRGBA;
     CSize _curBuffSize;
     int _methodRender = 1;
     

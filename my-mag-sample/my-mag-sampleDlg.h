@@ -56,7 +56,7 @@ private:
 
 public:
 
-	void OnCaptureFrame(VideoFrame *frame);
+	void OnCaptureFrame(CAPIMP::VideoFrame *frame);
     void CaptureThread();
     afx_msg void OnClose();
 };

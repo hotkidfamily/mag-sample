@@ -6,7 +6,7 @@
 
 #include <vector>
 
-typedef void (*funcCaptureCallback)(VideoFrame *frame, void *args);
+typedef void (*funcCaptureCallback)(CAPIMP::VideoFrame *frame, void *args);
 
 
 class CCapture 

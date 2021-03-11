@@ -1,13 +1,17 @@
 #pragma once
 
 #include <stdint.h>
+#include <d3d11.h>
+
+namespace CAPIMP
+{
 
 constexpr int32_t kVideoFrameMaxPlane = 1;
 
 
 class VideoFrame {
   public:
-    enum class VideoFrameType: uint32_t
+    enum class VideoFrameType
     {
         kVideoFrameTypeRGBA = 1 << 0,
         kVideoFrameTypeBGRA,
@@ -21,12 +25,16 @@ class VideoFrame {
 
     enum VideoFrameFlag
     {
-        kVideoFrameFlagRGB = 1 << 0,
-        kVideoFrameFlagYUV = 1 << 1,
-        kVideoFrameFlagTexture = 1 << 2, // texture
+        kVideoFrameFlagRGB = 0x01,
+        kVideoFrameFlagYUV = 0x02,
+        kVideoFrameFlagTexture = 0x04, // texture
     };
 
-    static VideoFrame *MakeFrame(int32_t w, int32_t h, int32_t s, VideoFrameType type, void *texture = nullptr)
+    static VideoFrame *MakeFrame(int32_t w,
+                                 int32_t h,
+                                 int32_t s,
+                                 VideoFrameType type,
+                                 ID3D11Texture2D *texture = nullptr)
     {
         VideoFrame *frame = new VideoFrame(w, h, s, type, texture);
         return frame;
@@ -79,6 +87,11 @@ class VideoFrame {
         return _data;
     }
 
+    ID3D11Texture2D *handle() const
+    {
+        return _handle;
+    }
+
     VideoFrameType type() const
     {
         return _pixelType;
@@ -90,7 +103,7 @@ class VideoFrame {
     }
 
   private:
-    VideoFrame(int32_t w, int32_t h, int32_t s, VideoFrameType t, void *texture)
+    VideoFrame(int32_t w, int32_t h, int32_t s, VideoFrameType t, ID3D11Texture2D *texture)
     {
         _width = w;
         _height = h;
@@ -118,5 +131,7 @@ class VideoFrame {
     VideoFrameType _pixelType = VideoFrameType::kVideoFrameTypeRGBA;
     VideoFrameFlag _flag = VideoFrameFlag::kVideoFrameFlagRGB;
     uint8_t *_data = nullptr;
-    void *_handle = nullptr;
+    ID3D11Texture2D *_handle = nullptr;
 };
+
+} // namespace CAPIMP

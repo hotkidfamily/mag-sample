@@ -189,17 +189,17 @@ HCURSOR CmymagsampleDlg::OnQueryDragIcon()
 }
 
 
-void CmymagsampleDlg::OnCaptureFrame(VideoFrame *frame)
+void CmymagsampleDlg::OnCaptureFrame(CAPIMP::VideoFrame *frame)
 {
     auto &render = _appContext->render;
     auto flag = frame->flag();
-    if (!(flag & VideoFrame::VideoFrameFlag::kVideoFrameFlagTexture))
+    if (!(flag & CAPIMP::VideoFrame::VideoFrameFlag::kVideoFrameFlagTexture))
     {
         render.render->display(*frame);
     }
 }
 
-void CaptureCallback(VideoFrame *frame, void *args)
+void CaptureCallback(CAPIMP::VideoFrame *frame, void *args)
 {
     CmymagsampleDlg *pDlg = reinterpret_cast<CmymagsampleDlg *>(args);
     pDlg->OnCaptureFrame(frame);

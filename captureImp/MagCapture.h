@@ -52,7 +52,7 @@ protected:
 #endif // USING_GDI_CAPTURE
 private:
     std::unique_ptr<MagInterface> _api = nullptr;
-    std::unique_ptr<VideoFrame> _frames;
+  std::unique_ptr<CAPIMP::VideoFrame> _frames;
     DesktopRect _lastRect;
     int32_t _offset = -1;
 

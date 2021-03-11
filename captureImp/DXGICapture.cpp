@@ -128,7 +128,7 @@ void DXGICapture::_deinit()
 bool DXGICapture::onCaptured(ID3D11Texture2D *text)
 {
     if (!_frames.get()) {
-        _frames.reset(VideoFrame::MakeFrame(0, 0, 0, VideoFrame::VideoFrameType::kVideoFrameTypeTexture, text));
+        _frames.reset(CAPIMP::VideoFrame::MakeFrame(0, 0, 0, CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeTexture, text));
     }
 
     {
@@ -157,7 +157,8 @@ bool DXGICapture::onCaptured(DXGI_MAPPED_RECT &rect, DXGI_OUTPUT_DESC &header)
     int bpp = CapUtility::kDesktopCaptureBPP;
     if (!_frames.get() || width != static_cast<UINT>(_frames->width()) || height != static_cast<UINT>(_frames->height())
         || stride != static_cast<UINT>(_frames->stride()) || bpp != CapUtility::kDesktopCaptureBPP) {
-        _frames.reset(VideoFrame::MakeFrame(width, height, stride, VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
+        _frames.reset(CAPIMP::VideoFrame::VideoFrame::MakeFrame(
+            width, height, stride, CAPIMP::VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
     }
 
     {
