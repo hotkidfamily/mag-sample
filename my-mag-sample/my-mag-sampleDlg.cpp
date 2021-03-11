@@ -192,7 +192,11 @@ HCURSOR CmymagsampleDlg::OnQueryDragIcon()
 void CmymagsampleDlg::OnCaptureFrame(VideoFrame *frame)
 {
     auto &render = _appContext->render;
-    render.render->display(*frame);
+    auto flag = frame->flag();
+    if (!(flag & VideoFrame::VideoFrameFlag::kVideoFrameFlagTexture))
+    {
+        render.render->display(*frame);
+    }
 }
 
 void CaptureCallback(VideoFrame *frame, void *args)

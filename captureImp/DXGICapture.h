@@ -42,6 +42,7 @@ class DXGICapture : public CCapture {
 
   public:
     bool onCaptured(DXGI_MAPPED_RECT &rect, DXGI_OUTPUT_DESC &desc);
+    bool onCaptured(ID3D11Texture2D *text);
 
   private:
     bool _init(HMONITOR &hm);

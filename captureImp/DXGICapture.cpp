@@ -125,6 +125,22 @@ void DXGICapture::_deinit()
 
 }
 
+bool DXGICapture::onCaptured(ID3D11Texture2D *text)
+{
+    if (!_frames.get()) {
+        _frames.reset(VideoFrame::MakeFrame(0, 0, 0, VideoFrame::VideoFrameType::kVideoFrameTypeTexture, text));
+    }
+
+    {
+        std::lock_guard<decltype(_cbMutex)> guard(_cbMutex);
+
+        if (_callback) {
+            _callback(_frames.get(), _callbackargs);
+        }
+    }
+    return true;
+}
+
 bool DXGICapture::onCaptured(DXGI_MAPPED_RECT &rect, DXGI_OUTPUT_DESC &header)
 {
     bool bRet = false;
@@ -276,7 +292,9 @@ bool DXGICapture::captureImage(const DesktopRect &rect)
     _deviceContext->CopyResource(_destFrame.Get(), hAcquiredDesktopImage.Get());
     _desktopDuplication->ReleaseFrame();
 #endif
+    onCaptured(_destFrame.Get());
 
+#if 0
     ComPtr<IDXGISurface1> hStagingSurf = NULL;
     hr = _destFrame->QueryInterface(__uuidof(IDXGISurface1), &hStagingSurf);
     if (FAILED(hr)) {
@@ -289,6 +307,7 @@ bool DXGICapture::captureImage(const DesktopRect &rect)
         onCaptured(mappedRect, _outputDesc);
         hStagingSurf->Unmap();
     }
+#endif
 
     bRet = SUCCEEDED(hr);
 
