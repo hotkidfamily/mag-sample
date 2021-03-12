@@ -49,5 +49,7 @@ __declspec(dllexport) LRESULT GetPrimeryWindowsRect(RECT &rect);
 __declspec(dllexport) BOOL GetWindowRect(HWND hWnd, RECT &rect);
 
 __declspec(dllexport) int CaptureAnImage(HWND hWnd, std::wstring &path);
+
+__declspec(dllexport) int64_t queryWin10ReleaseID();
 };
     

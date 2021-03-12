@@ -30,9 +30,13 @@ class CCapture
 class CapOptions
 {
   public:
-    bool enableWindowFilter() const
+    bool getEnableWindowFilter() const
     {
         return _usingWindowFilter;
+    }
+    void setEnableWindowFilter()
+    {
+        _usingWindowFilter = true;
     }
 
   private:

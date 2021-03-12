@@ -423,4 +423,39 @@ BOOL GetWindowRect(HWND hWnd, RECT &iRect)
     return bRet;
 }
 
+
+int64_t queryWin10ReleaseID()
+{
+    static int64_t releaseID = 0;
+    if (releaseID == 0) {
+        HKEY hKey = NULL;
+        DWORD dwType;
+        ULONG nBytes;
+        LONG lRes = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, KEY_READ,
+                                   &hKey);
+        if (lRes == ERROR_SUCCESS) {
+            lRes = ::RegQueryValueEx(hKey, L"ReleaseId", NULL, &dwType, NULL, &nBytes);
+            if (lRes != ERROR_SUCCESS) {
+                return false;
+            }
+
+            if (dwType != REG_SZ && dwType != REG_EXPAND_SZ) {
+                return false;
+            }
+
+            uint8_t *tmp = new uint8_t[nBytes];
+            lRes = ::RegQueryValueEx(hKey, L"ReleaseId", NULL, &dwType, (LPBYTE)tmp, &nBytes);
+            std::wstring value;
+            value.assign((wchar_t *)tmp);
+            delete[] tmp;
+
+            releaseID = std::stol(value);
+
+            ::RegCloseKey(hKey);
+        }
+    }
+
+    return releaseID;
+}
+
 };

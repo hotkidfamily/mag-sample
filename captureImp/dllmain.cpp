@@ -5,6 +5,7 @@
 #include "MagCapture.h"
 #include "GDICapture.h"
 #include "DXGICapture.h"
+#include "CapUtility.h"
 
 #include <VersionHelpers.h>
 
@@ -24,62 +25,28 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     return TRUE;
 }
 
-int64_t queryWin10ReleaseID()
-{
-    static int64_t releaseID = 0;
-    if (releaseID == 0) {
-        HKEY hKey = NULL;
-        DWORD dwType;
-        ULONG nBytes;
-        LONG lRes = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, KEY_READ,
-                                   &hKey);
-        if (lRes == ERROR_SUCCESS) {
-            lRes = ::RegQueryValueEx(hKey, L"ReleaseId", NULL, &dwType, NULL, &nBytes);
-            if (lRes != ERROR_SUCCESS) {
-                return false;
-            }
-
-            if (dwType != REG_SZ && dwType != REG_EXPAND_SZ) {
-                return false;
-            }
-
-            uint8_t *tmp = new uint8_t[nBytes];
-            lRes = ::RegQueryValueEx(hKey, L"ReleaseId", NULL, &dwType, (LPBYTE)tmp, &nBytes);
-            std::wstring value;
-            value.assign((wchar_t*)tmp);
-            delete[] tmp;
-
-            releaseID = std::stol(value);
-
-            ::RegCloseKey(hKey);
-        }
-    }
-
-    return releaseID;
-}
 
 bool CAPIMP_CreateCapture(CCapture *&capture, CapOptions &option)
 {
     CCapture *Cap = nullptr; 
-    if (option.enableWindowFilter()) {
+    if (option.getEnableWindowFilter()) {
         if (IsWindows7OrGreater()) {
             Cap = new MagCapture();
         }
-        else {
-            Cap = new GDICapture();
-        }
     }
-    else {
+
+    if (!Cap)
+    {
         if (IsWindows8OrGreater()) {
-            if (IsWindows10OrGreater() && (queryWin10ReleaseID() > 1904)) {
-                Cap = new DXGICapture();
+            if (IsWindows10OrGreater() && (CapUtility::queryWin10ReleaseID() > 1803)) {
+                Cap = new DXGICapture(); // WinRT capture 
             }
             else {
-                Cap = new DXGICapture();
+                Cap = new DXGICapture(); // DXGI capture
             }
         }
         else if(IsWindows7OrGreater()){
-            Cap = new MagCapture();
+            Cap = new MagCapture(); // using Mag Capture or dx11 
         }
         else {
             Cap = new GDICapture();
