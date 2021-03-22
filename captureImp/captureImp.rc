@@ -52,7 +52,7 @@ END
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION 3,0,0312,1123
- FILEVERSION 3,0,0312,1123
+ PRODUCTVERSION 3,0,0312,1123
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "hotkid"
             VALUE "FileDescription", "window-capture-implementation"
-"ProductVersion", "3.0.9794.6158"
+            VALUE "ProductVersion", "3.0.9794.6158"
             VALUE "InternalName", "captureImp.dll"
             VALUE "LegalCopyright", "Copyright (C) 202~2021"
             VALUE "OriginalFilename", "captureImp.dll"
             VALUE "ProductName", "capture-sample"
-"ProductVersion", "3.0.9794.6158"
+            VALUE "ProductVersion", "3.0.9794.6158"
         END
     END
     BLOCK "VarFileInfo"
