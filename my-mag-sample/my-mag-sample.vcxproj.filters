@@ -13,6 +13,9 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="hlsl">
+      <UniqueIdentifier>{3d02600c-9f2b-4aa9-9d44-d50331ec2a1e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -25,9 +28,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CapUtility.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="d3drender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DesktopRect.h">
@@ -69,12 +69,15 @@
     <ClInclude Include="Win32WindowEnumeration.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="d3d11render.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gpukits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CapUtility.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="d3drender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DXGICapture.cpp">
@@ -101,6 +104,12 @@
     <ClCompile Include="VideoFrame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="d3d11render.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gpukits.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="my-mag-sample.rc">
@@ -110,6 +119,18 @@
   <ItemGroup>
     <None Include="res\mymagsample.rc2">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="hlsl\vsRGBA.hlsl">
+      <Filter>hlsl</Filter>
+    </None>
+    <None Include="hlsl\psRGBA.hlsl">
+      <Filter>hlsl</Filter>
+    </None>
+    <None Include="hlsl\psNV12toRGBA.hlsl">
+      <Filter>hlsl</Filter>
+    </None>
+    <None Include="hlsl\psI420toRGBA.hlsl">
+      <Filter>hlsl</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

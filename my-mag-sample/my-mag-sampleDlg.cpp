@@ -16,6 +16,7 @@
 
 #include <stdexcept>
 #include <set>
+#include <chrono>
 
 #include <dwmapi.h>
 #pragma comment(lib, "dwmapi.lib")
@@ -355,7 +356,7 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
     if (render.render) {
         render.render.reset(nullptr);
     }
-    render.render.reset(new d3drender);
+    render.render.reset(new d3d11render);
     render.render->init(_previewWnd.GetSafeHwnd());
     render.render->setMode(2);
 
@@ -399,7 +400,7 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     if (render.render) {
         render.render.reset(nullptr);
     }
-    render.render.reset(new d3drender);
+    render.render.reset(new d3d11render);
     render.render->init(_previewWnd.GetSafeHwnd());
     render.render->setMode(2);
 

@@ -2,7 +2,7 @@
 
 #include "capturer-define.h"
 
-#include "d3drender.h"
+#include "d3d11render.h"
 
 #include <vector>
 #include <thread>
@@ -32,6 +32,6 @@ typedef struct tagAppContext
 
     struct
     {
-        std::unique_ptr<d3drender> render;
+        std::unique_ptr<d3d11render> render;
     }render;
 }AppContext;

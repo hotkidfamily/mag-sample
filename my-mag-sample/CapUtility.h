@@ -14,7 +14,7 @@ struct DisplaySetting
     }
     DisplaySetting(DISPLAY_DEVICEW dev, DEVMODEW mode)
     {
-        _device = dev;
+        _dev = dev;
         _mode = mode;
     }
 
@@ -27,11 +27,11 @@ struct DisplaySetting
 
     std::wstring name() const noexcept
     {
-        return _device.DeviceName;
+        return _dev.DeviceName;
     }
 
   private:
-    DISPLAY_DEVICEW _device;
+    DISPLAY_DEVICEW _dev;
     DEVMODEW _mode;
 };
 

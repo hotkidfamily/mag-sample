@@ -273,7 +273,7 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
         || width != static_cast<UINT>(_frames->width()) || height != static_cast<UINT>(_frames->height())
         || stride != static_cast<UINT>(_frames->stride()) || bpp != CapUtility::kDesktopCaptureBPP) {
         _frames.reset(VideoFrame::MakeFrame(width, height, stride,
-                                            VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
+                                            VideoFrameType::kVideoFrameTypeRGBA));
     }
 
     {

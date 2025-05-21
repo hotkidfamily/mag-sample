@@ -28,14 +28,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
@@ -43,14 +43,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
@@ -209,10 +209,11 @@
     <ClInclude Include="AppContext.h" />
     <ClInclude Include="capturer-define.h" />
     <ClInclude Include="CapUtility.h" />
-    <ClInclude Include="d3drender.h" />
+    <ClInclude Include="d3d11render.h" />
     <ClInclude Include="DesktopRect.h" />
     <ClInclude Include="DXGICapture.h" />
     <ClInclude Include="GDICapture.h" />
+    <ClInclude Include="gpukits.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="MagCapture.h" />
     <ClInclude Include="my-mag-sample.h" />
@@ -226,9 +227,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CapUtility.cpp" />
-    <ClCompile Include="d3drender.cpp" />
+    <ClCompile Include="d3d11render.cpp" />
     <ClCompile Include="DXGICapture.cpp" />
     <ClCompile Include="GDICapture.cpp" />
+    <ClCompile Include="gpukits.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="MagCapture.cpp" />
     <ClCompile Include="my-mag-sample.cpp" />
@@ -249,6 +251,22 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\my-mag-sample.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="hlsl\psRGBA.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="hlsl\vsRGBA.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="hlsl\psI420toRGBA.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="hlsl\psNV12toRGBA.hlsl">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

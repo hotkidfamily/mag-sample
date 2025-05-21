@@ -4,17 +4,17 @@
 
 const int32_t kVideoFrameMaxPlane = 1;
 
+enum class VideoFrameType
+{
+    kVideoFrameTypeRGBA = 0,
+    kVideoFrameTypeBGRA,
+    kVideoFrameTypeRGB24,
+    kVideoFrameTypeI420,
+    kVideoFrameTypeNV12,
+}; 
 
 class VideoFrame {
   public:
-    enum class VideoFrameType
-    {
-        kVideoFrameTypeRGBA = 0,
-        kVideoFrameTypeBGRA,
-        kVideoFrameTypeRGB24,
-        kVideoFrameTypeI420,
-        kVideoFrameTypeNV12,
-    }; 
 
     static VideoFrame* MakeFrame(int32_t w, int32_t h, int32_t s, VideoFrameType type)
     {

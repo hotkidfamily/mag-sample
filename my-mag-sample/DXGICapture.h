@@ -49,8 +49,8 @@ class DXGICapture : public CCapture {
     bool _loadD3D11();
 
   private:
-    ComPtr<ID3D11Device> _device = nullptr;
-    ComPtr<ID3D11DeviceContext> _deviceContext = nullptr;
+    ComPtr<ID3D11Device> _dev = nullptr;
+    ComPtr<ID3D11DeviceContext> _ctx = nullptr;
 
     ComPtr<IDXGIOutputDuplication> _desktopDuplication = nullptr;
     DXGI_OUTPUT_DESC _outputDesc = {};

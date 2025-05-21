@@ -96,7 +96,7 @@ bool GDICapture::onCaptured(void *srcdata, BITMAPINFOHEADER &header)
     if (!_frames.get() || width != static_cast<UINT>(_frames->width())
         || height != static_cast<UINT>(_frames->height()) || stride != static_cast<UINT>(_frames->stride())
         || bpp != CapUtility::kDesktopCaptureBPP) {
-        _frames.reset(VideoFrame::MakeFrame(width, height, stride, VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
+        _frames.reset(VideoFrame::MakeFrame(width, height, stride, VideoFrameType::kVideoFrameTypeRGBA));
     }
 
     {

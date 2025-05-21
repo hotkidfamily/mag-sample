@@ -89,7 +89,7 @@ bool DXGICapture::_init(HMONITOR &hm)
 
         for (UINT DriverTypeIndex = 0; DriverTypeIndex < NumDriverTypes; ++DriverTypeIndex) {
             hr = fnD3D11CreateDevice(hDxgiAdapter.Get(), DriverTypes[DriverTypeIndex], NULL, 0, FeatureLevels,
-                                     NumFeatureLevels, D3D11_SDK_VERSION, &_device, &FeatureLevel, &_deviceContext);
+                                     NumFeatureLevels, D3D11_SDK_VERSION, &_dev, &FeatureLevel, &_ctx);
             if (SUCCEEDED(hr)) {
                 break;
             }
@@ -106,7 +106,7 @@ bool DXGICapture::_init(HMONITOR &hm)
             break;
         }
 
-        hr = hDxgiOutput1->DuplicateOutput(_device.Get(), &_desktopDuplication);
+        hr = hDxgiOutput1->DuplicateOutput(_dev.Get(), &_desktopDuplication);
         if (FAILED(hr)) {
             break;
         }
@@ -141,7 +141,7 @@ bool DXGICapture::onCaptured(DXGI_MAPPED_RECT &rect, DXGI_OUTPUT_DESC &header)
     int bpp = CapUtility::kDesktopCaptureBPP;
     if (!_frames.get() || width != static_cast<UINT>(_frames->width()) || height != static_cast<UINT>(_frames->height())
         || stride != static_cast<UINT>(_frames->stride()) || bpp != CapUtility::kDesktopCaptureBPP) {
-        _frames.reset(VideoFrame::MakeFrame(width, height, stride, VideoFrame::VideoFrameType::kVideoFrameTypeRGBA));
+        _frames.reset(VideoFrame::MakeFrame(width, height, stride, VideoFrameType::kVideoFrameTypeRGBA));
     }
 
     {
@@ -221,7 +221,7 @@ bool DXGICapture::captureImage(const DesktopRect &rect)
         fDesc.MipLevels = 1;
         fDesc.ArraySize = 1;
         fDesc.SampleDesc.Count = 1;
-        hr = _device->CreateTexture2D(&fDesc, NULL, &_destFrame);
+        hr = _dev->CreateTexture2D(&fDesc, NULL, &_destFrame);
         if (FAILED(hr)) {
             _desktopDuplication->ReleaseFrame();
             return FALSE;
@@ -273,7 +273,7 @@ bool DXGICapture::captureImage(const DesktopRect &rect)
 
     _deviceContext->CopyResource(_destFrame.Get(), hNewDesktopImage.Get());
 #else
-    _deviceContext->CopyResource(_destFrame.Get(), hAcquiredDesktopImage.Get());
+    _ctx->CopyResource(_destFrame.Get(), hAcquiredDesktopImage.Get());
     _desktopDuplication->ReleaseFrame();
 #endif
 
