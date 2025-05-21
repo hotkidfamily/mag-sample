@@ -5,19 +5,18 @@
 #include <magnification.h>
 
 // Public Functions
-typedef BOOL(WINAPI *fnMagInitialize)();
-typedef BOOL(WINAPI *fnMagUninitialize)();
-
-typedef BOOL(WINAPI *fnMagSetWindowSource)(HWND hwnd, RECT rect);
-typedef BOOL(WINAPI *fnMagGetWindowSource)(HWND hwnd, RECT *pRect);
-typedef BOOL(WINAPI *fnMagSetWindowTransform)(HWND hwnd, PMAGTRANSFORM pTransform);
-typedef BOOL(WINAPI *fnMagGetWindowTransform)(HWND hwnd, PMAGTRANSFORM pTransform);
-typedef BOOL(WINAPI *fnMagSetWindowFilterList)(HWND hwnd, DWORD dwFilterMode, int count, HWND *pHWND);
-typedef int  (WINAPI *fnMagGetWindowFilterList)(HWND hwnd, DWORD *pdwFilterMode, int count, HWND *pHWND);
-typedef BOOL(WINAPI *fnMagSetImageScalingCallback)(HWND hwnd, MagImageScalingCallback callback);
-typedef MagImageScalingCallback(WINAPI *fnMagGetImageScalingCallback)(HWND hwnd);
-typedef BOOL(WINAPI *fnMagSetColorEffect)(HWND hwnd, PMAGCOLOREFFECT pEffect);
-typedef BOOL(WINAPI *fnMagGetColorEffect)(HWND hwnd, PMAGCOLOREFFECT pEffect);
+typedef decltype(&::MagInitialize) fnMagInitialize;
+typedef decltype(&::MagUninitialize) fnMagUninitialize;
+typedef decltype(&::MagSetWindowSource) fnMagSetWindowSource;
+typedef decltype(&::MagGetWindowSource) fnMagGetWindowSource;
+typedef decltype(&::MagSetWindowTransform) fnMagSetWindowTransform;
+typedef decltype(&::MagGetWindowTransform) fnMagGetWindowTransform;
+typedef decltype(&::MagSetWindowFilterList) fnMagSetWindowFilterList;
+typedef decltype(&::MagGetWindowFilterList) fnMagGetWindowFilterList;
+typedef decltype(&::MagSetImageScalingCallback) fnMagSetImageScalingCallback;
+typedef decltype(&::MagGetImageScalingCallback) fnMagGetImageScalingCallback;
+typedef decltype(&::MagSetColorEffect) fnMagSetColorEffect;
+typedef decltype(&::MagGetColorEffect) fnMagGetColorEffect;
 
 struct MagInterface
 {
