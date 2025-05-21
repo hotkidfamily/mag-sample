@@ -10,5 +10,6 @@ struct PSInput
 float4 main(PSInput input) : SV_TARGET
 {
 	float4 v = yTexture.Sample(texSampler, input.uv);
-    return v;
+	
+    return float4(v.b, v.g, v.r, 1.0f);
 }
