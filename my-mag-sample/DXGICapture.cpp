@@ -81,8 +81,8 @@ bool DXGICapture::_init(HMONITOR &hm)
         };
         UINT NumDriverTypes = ARRAYSIZE(DriverTypes);
 
-        D3D_FEATURE_LEVEL FeatureLevels[]
-            = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0, D3D_FEATURE_LEVEL_9_1 };
+        D3D_FEATURE_LEVEL FeatureLevels[] = { D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1,
+                                              D3D_FEATURE_LEVEL_10_0, D3D_FEATURE_LEVEL_9_1 };
         UINT NumFeatureLevels = ARRAYSIZE(FeatureLevels);
 
         D3D_FEATURE_LEVEL FeatureLevel;
