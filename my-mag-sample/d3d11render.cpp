@@ -10,6 +10,15 @@
 
 using namespace Microsoft::WRL;
 
+d3d11render::~d3d11render()
+{
+    constexpr float ClearColor[4] = { 0.4f, 0.4f, 0.4f, 1.0f };
+    if (_ctx && _mainRTV && _swapChain) {
+        _ctx->ClearRenderTargetView(_mainRTV.Get(), ClearColor);
+        _swapChain->Present(0, 0);
+    }
+}
+
 HRESULT d3d11render::init(HWND hwnd)
 {
     HRESULT hResult = S_OK;

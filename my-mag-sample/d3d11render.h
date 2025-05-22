@@ -5,7 +5,9 @@
 #include "VideoFrame.h"
 
 class d3d11render {
-  public:
+public:
+    ~d3d11render();
+
     HRESULT init(HWND hwnd);
 
     HRESULT display(const VideoFrame &frame);
