@@ -7,7 +7,7 @@
 #include <vector>
 #include <thread>
 
-const uint32_t KDefaultFPS = 10;
+const uint32_t KDefaultFPS = 30;
 const uint32_t KThreadCaptureMessage = WM_USER+1;
 
 typedef struct tagAppContext
