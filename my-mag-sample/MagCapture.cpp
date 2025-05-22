@@ -207,18 +207,18 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
         return false;
     }
 
-    logger::log(LogLevel::Info, " %dx%d,%d, %d, %d", header.width, header.height, header.offset, header.stride, header.cbSize);
+    //logger::log(LogLevel::Info, " %dx%d,%d, %d, %d\n", header.width, header.height, header.offset, header.stride, header.cbSize);
 
     int bpp = header.cbSize / header.width / header.height; // bpp should be 4
     if (!_frames.get() || header.format != GUID_WICPixelFormat32bppRGBA 
-        || width != static_cast<UINT>(_frames->width()) || height != static_cast<UINT>(_frames->height())
-        || stride != static_cast<UINT>(_frames->stride()) || bpp != CapUtility::kDesktopCaptureBPP) {
+        || width != _frames->width() || height != _frames->height()
+        || stride != _frames->stride() || bpp != CapUtility::kDesktopCaptureBPP) {
         _frames.reset(VideoFrame::MakeFrame(width, height, stride,
                                             VideoFrameType::kVideoFrameTypeRGBA));
     }
 
     {
-        uint8_t *pDst = reinterpret_cast<uint8_t *>(_frames->data());
+        uint8_t *pDst = _frames->data();
         uint8_t *pSrc = reinterpret_cast<uint8_t *>(srcdata) + header.offset;
 
         for (int i = 0; i < height; i++) {

@@ -8,8 +8,6 @@
 
 #include "MagFuncDefine.h"
 
-#define USING_GDI_CAPTURE 0 // hardware render, so gdi capture nothing.
-
 class MagCapture : public CCapture
 {
 public:
@@ -28,19 +26,13 @@ public:
     virtual bool usingTimer() override;
 
   public:
-
-#if USING_GDI_CAPTURE
-    bool onCaptured(void *srcdata, BITMAPINFOHEADER &header);
-#else
     bool onCaptured(void *srcdata, MAGIMAGEHEADER srcheader);
-#endif
 
 protected:
     bool initMagnifier(DesktopRect &rect);
     bool destoryMagnifier();
     bool loadMagnificationAPI();
-#if USING_GDI_CAPTURE
-#else
+
     static BOOL WINAPI OnMagImageScalingCallback(HWND hwnd,
                                                  void *srcdata,
                                                  MAGIMAGEHEADER srcheader,
@@ -49,7 +41,6 @@ protected:
                                                  RECT unclipped,
                                                  RECT clipped,
                                                  HRGN dirty);
-#endif // USING_GDI_CAPTURE
 private:
     std::unique_ptr<MagInterface> _api = nullptr;
     std::unique_ptr<VideoFrame> _frames;
@@ -61,14 +52,6 @@ private:
 
     HWND _hostWnd = nullptr;
     HWND _magWnd = nullptr;
-
-#if USING_GDI_CAPTURE
-    HDC _magHDC = nullptr;
-    HDC _compatibleDC = nullptr;
-    HBITMAP _hDibBitmap = nullptr;
-    void *_hdstPtr = nullptr;
-    BITMAPINFO bmi = {0};
-#endif
 
     std::recursive_mutex _cbMutex;
     funcCaptureCallback _callback = nullptr;
