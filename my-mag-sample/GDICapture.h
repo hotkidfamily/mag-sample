@@ -35,6 +35,6 @@ class GDICapture : public CCapture {
     funcCaptureCallback _callback = nullptr;
     void *_callbackargs = nullptr;
 
-
     std::vector<HWND> _coverdWindows;
+    HWND _previousHwnd = nullptr;
 };

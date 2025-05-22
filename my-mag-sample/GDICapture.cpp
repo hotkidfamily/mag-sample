@@ -17,6 +17,10 @@ bool GDICapture::startCaptureWindow(HWND hWnd)
 {
     bool bRet = false;
 
+    _previousHwnd = GetForegroundWindow();
+    SetForegroundWindow(hWnd);
+    BringWindowToTop(hWnd);
+
     HMONITOR hm = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
 
     MONITORINFOEX mInfo;
@@ -71,6 +75,8 @@ bool GDICapture::stop()
     _compatibleDC = nullptr;
     _monitorDC = nullptr;
     _hDibBitmap = nullptr;
+
+    SetForegroundWindow(_previousHwnd);
 
     return bRet;
 }

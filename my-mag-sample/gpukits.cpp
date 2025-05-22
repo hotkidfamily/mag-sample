@@ -66,8 +66,8 @@ HRESULT CompilePixelShader(LPCWSTR srcFile,
     flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
-    // We generally prefer to use the higher CS shader profile when
-    // possible as ps 5.0 is better performance on 11-class hardware
+    // We generally prefer to use the higher CS shader profile when possible
+    // as ps 5.0 is better performance on 11-class hardware
     LPCSTR profile = (device->GetFeatureLevel() >= D3D_FEATURE_LEVEL_11_0) ? "ps_5_0" : "ps_4_0";
 
     ID3DBlob *shaderBlob = nullptr;
@@ -107,8 +107,8 @@ HRESULT CompileComputeShader(LPCWSTR srcFile,
     flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
-    // We generally prefer to use the higher CS shader profile when possible as CS 5.0 is better performance on 11-class
-    // hardware
+    // We generally prefer to use the higher CS shader profile when possible
+    // as CS 5.0 is better performance on 11-class hardware
     LPCSTR profile = (device->GetFeatureLevel() >= D3D_FEATURE_LEVEL_11_0) ? "cs_5_0" : "cs_4_0";
 
     ID3DBlob *shaderBlob = nullptr;

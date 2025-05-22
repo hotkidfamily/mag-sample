@@ -11,9 +11,9 @@ struct PS_INPUT
 float4 main(PS_INPUT input) : COLOR0
 {
     float y = tex2D(YTex, input.y).r;
-//这里不需要除以2
-    float u = tex2D(UTex, input.uv.xy).r - 0.5f;
-    float v = tex2D(UVTex, input.uv.xy).g - 0.5f;
+    float2 uv = tex2D(UVTex, input.uv);
+    float u = uv.r - 0.5f;
+    float v = uv.g - 0.5f;
 
     float r = y + 1.14f * v;
     float g = y - 0.394f * u - 0.581f * v;
