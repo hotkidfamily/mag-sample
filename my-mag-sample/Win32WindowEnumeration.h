@@ -94,6 +94,10 @@ bool IsWindowCapable(Window wnd)
         return false;
     }
 
+    if (IsIconic(hwnd)) {
+        return false;
+    }
+
     if (GetAncestor(hwnd, GA_ROOT) != hwnd){
         return false;
     }
