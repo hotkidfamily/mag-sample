@@ -5,15 +5,7 @@
 #include <array>
 #include <vector>
 
-typedef HRESULT (__stdcall *funcDwmGetWindowAttribute)(
-    HWND  hwnd,
-    DWORD dwAttribute,
-    PVOID pvAttribute,
-    DWORD cbAttribute
-);
-
-
-static funcDwmGetWindowAttribute _ptrDwmGetWindowAttribute = nullptr;
+static decltype(::DwmGetWindowAttribute) *_fnDwmGetWindowAttribute = nullptr;
 
 struct Window
 {
@@ -56,122 +48,78 @@ std::wstring GetWindowText(HWND hwnd)
     return title;
 }
 
-bool IsAltTabWindow(Window const& window)
+bool IsWindowExcludeFromCapture(HWND hwnd)
 {
-    HWND hwnd = window.Hwnd();
-    HWND shellWindow = GetShellWindow();
+    DWORD affinity = 0;
+    auto ret = GetWindowDisplayAffinity(hwnd, &affinity);
+    return (ret == TRUE) && (affinity == WDA_EXCLUDEFROMCAPTURE);
+}
 
-    auto title = window.Title();
-    auto className = window.ClassName();
-
-    if (hwnd == shellWindow)
-    {
-        return false;
-    }
-
-    if (title.length() == 0)
-    {
-        return false;
-    }
-
-    if (!IsWindowVisible(hwnd))
-    {
-        return false;
-    }
-
-    if (GetAncestor(hwnd, GA_ROOT) != hwnd)
-    {
-        return false;
-    }
-
-    if (IsIconic(hwnd)) {
-        return false;
-    }
+bool IsWindowCloaked(Window wnd) 
+{
+    bool ret = FALSE;
 
     DWORD cloaked = FALSE;
-    if (_ptrDwmGetWindowAttribute) {
-        HRESULT hrTemp = _ptrDwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, &cloaked, sizeof(cloaked));
-        if (SUCCEEDED(hrTemp) &&
-            cloaked == DWM_CLOAKED_SHELL)
-        {
-            return false;
-        }
-    }
-    
-    return true;
-}
-
-BOOL IsWindowApp(Window wnd) 
-{
-    return FALSE;
-}
-
-BOOL IsUWPFrameWorkApp(Window wnd) 
-{
-    BOOL ret = FALSE;
-    ret = wnd.ClassName() == L"ApplicationFrameWindow";
-
-    if (ret) {
-        DWORD cloaked = FALSE;
-        ret = FALSE;
-        if (_ptrDwmGetWindowAttribute) {
-            HRESULT hrTemp = _ptrDwmGetWindowAttribute(wnd.Hwnd(), DWMWA_CLOAKED, &cloaked, sizeof(cloaked));
-            if (SUCCEEDED(hrTemp) && cloaked) {
-                ret = TRUE;
-            }
-        }
+    if (_fnDwmGetWindowAttribute) {
+        HRESULT hrTemp = _fnDwmGetWindowAttribute(wnd.Hwnd(), DWMWA_CLOAKED, &cloaked, sizeof(cloaked));
+        ret = SUCCEEDED(hrTemp) && cloaked;
     }
 
     return ret;
 }
 
-BOOL IsUWPApp(Window wnd)
-{ 
-    BOOL ret = wnd.ClassName() == L"Windows.UI.Core.CoreWindow";
-
-    return ret;
-}
-
-BOOL IsInvalidWindow(Window wnd)
+bool IsInvalidWindowSize(Window wnd)
 {
     RECT rect;
     GetWindowRect(wnd.Hwnd(), &rect);
-    return IsRectEmpty(&rect);
+    return !!IsRectEmpty(&rect);
+}
+
+bool IsWindowCapable(Window wnd)
+{
+    HWND hwnd = wnd.Hwnd();
+    if (hwnd == GetShellWindow()) {
+        return false;
+    }
+
+    if (wnd.Title().length() == 0) {
+        return false;
+    }
+
+    if (!IsWindowVisible(hwnd)) {
+        return false;
+    }
+
+    if (IsWindowExcludeFromCapture(hwnd)) {
+        return false;
+    }
+
+    if (GetAncestor(hwnd, GA_ROOT) != hwnd){
+        return false;
+    }
+
+    return true;
 }
 
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
     auto class_name = GetClassName(hwnd);
     auto title = GetWindowText(hwnd);
-
     auto window = Window(hwnd, title, class_name);
 
-    if (!IsAltTabWindow(window))
+    if (!IsWindowCapable(window))
     {
         return TRUE;
     }
 
-    if (IsWindowApp(window)) {
+    if (IsInvalidWindowSize(window)) {
         return TRUE;
     }
 
-    if (IsUWPFrameWorkApp(window)) {
-        return TRUE;
-    }
-
-    //if (IsUWPApp(window)) {
-    //    return TRUE;
-    //}
-
-    if (IsInvalidWindow(window)) {
+    if (IsWindowCloaked(window)) {
         return TRUE;
     }
     
-    LONG style = GetWindowLong(hwnd, GWL_STYLE);
-    if (style & WS_DISABLED) {
-        return TRUE;
-    }
-
     LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
     if (exStyle & WS_EX_TOOLWINDOW) {
         return TRUE;
@@ -188,11 +136,11 @@ const std::vector<Window> EnumerateWindows()
     std::vector<Window> windows;
     HMODULE hmodule = nullptr;
 
-    if (!_ptrDwmGetWindowAttribute) {
+    if (!_fnDwmGetWindowAttribute) {
         hmodule = LoadLibraryW(L"Dwmapi.dll");
         if (hmodule) {
-            _ptrDwmGetWindowAttribute
-                = reinterpret_cast<funcDwmGetWindowAttribute>(GetProcAddress(hmodule, "DwmGetWindowAttribute"));
+            _fnDwmGetWindowAttribute = reinterpret_cast<decltype(_fnDwmGetWindowAttribute)>(
+                GetProcAddress(hmodule, "DwmGetWindowAttribute"));
         }
     }
 
