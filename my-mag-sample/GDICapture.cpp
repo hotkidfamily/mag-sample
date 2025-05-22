@@ -200,15 +200,7 @@ bool GDICapture::setCallback(funcCaptureCallback fcb, void *args)
     return bRet;
 }
 
-bool GDICapture::setExcludeWindows(HWND hWnd)
-{
-    bool bRet = false;
-    _coverdWindows.clear();
-    _coverdWindows.push_back(hWnd);
-    return bRet;
-}
-
-bool GDICapture::setExcludeWindows(std::vector<HWND> hWnd)
+bool GDICapture::setExcludeWindows(std::vector<HWND>& hWnd)
 {
     bool bRet = false;
 

@@ -14,8 +14,7 @@ class GDICapture : public CCapture {
     virtual bool stop() final;
     virtual bool captureImage(const DesktopRect &rect) final;
     virtual bool setCallback(funcCaptureCallback, void *) final;
-    virtual bool setExcludeWindows(HWND hWnd) final;
-    virtual bool setExcludeWindows(std::vector<HWND> hWnd) final;
+    virtual bool setExcludeWindows(std::vector<HWND>& hWnd) final;
     virtual const char *getName() final;
     virtual bool usingTimer() final;
 

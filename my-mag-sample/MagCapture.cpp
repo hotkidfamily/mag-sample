@@ -296,16 +296,7 @@ bool MagCapture::captureImage(const DesktopRect& capRect)
 }
 
 
-bool MagCapture::setExcludeWindows(HWND hWnd)
-{
-    bool ret = false;
-
-    _api->SetWindowFilterList(_magWnd, MW_FILTERMODE_EXCLUDE, 1, &hWnd);
-
-    return ret;
-}
-
-bool MagCapture::setExcludeWindows(std::vector<HWND> hWnd)
+bool MagCapture::setExcludeWindows(std::vector<HWND>& hWnd)
 {
     bool ret = false;
 

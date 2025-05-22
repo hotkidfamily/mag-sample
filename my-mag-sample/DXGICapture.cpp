@@ -306,15 +306,7 @@ bool DXGICapture::setCallback(funcCaptureCallback fcb, void *args)
     return bRet;
 }
 
-bool DXGICapture::setExcludeWindows(HWND hWnd)
-{
-    bool bRet = true;
-    _coverdWindows.clear();
-    _coverdWindows.push_back(hWnd);
-    return bRet;
-}
-
-bool DXGICapture::setExcludeWindows(std::vector<HWND> hWnd)
+bool DXGICapture::setExcludeWindows(std::vector<HWND>& hWnd)
 {
     bool bRet = true;
 
