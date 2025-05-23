@@ -17,6 +17,7 @@
 #include <stdexcept>
 #include <set>
 #include <chrono>
+#include <sstream>
 
 #include <dwmapi.h>
 #pragma comment(lib, "dwmapi.lib")
@@ -70,7 +71,7 @@ CmymagsampleDlg::CmymagsampleDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_MYMAGSAMPLE_DIALOG, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-    _appContext.reset(new AppContext());
+    _appContext = std::make_unique<AppContext>();
 }
 
 void CmymagsampleDlg::DoDataExchange(CDataExchange* pDX)
@@ -105,6 +106,8 @@ BEGIN_MESSAGE_MAP(CmymagsampleDlg, CDialogEx)
 BOOL CmymagsampleDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
+
+    SetWindowDisplayAffinity(GetSafeHwnd(), WDA_EXCLUDEFROMCAPTURE);
 
 	// Add "About..." menu item to system menu.
 
@@ -239,7 +242,8 @@ LRESULT CmymagsampleDlg::OnUserDefinedMessage(WPARAM wParam, LPARAM lParam)
 
     if (timer.timerID == TIMER_SCREEN_CAPTURE) {
         DesktopRect rect = capturer.rect;
-        capturer.host->setExcludeWindows(GetSafeHwnd());
+        std::vector<HWND> es = { GetSafeHwnd() };
+        capturer.host->setExcludeWindows(es);
         if (capturer.host.get())
             capturer.host->captureImage(rect);
     }
@@ -277,7 +281,8 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
     }
     else if (TIMER_SCREEN_CAPTURE == nIDEvent) {
         DesktopRect rect = capturer.rect;
-        capturer.host->setExcludeWindows(GetSafeHwnd());
+        std::vector<HWND> es = { GetSafeHwnd() };
+        capturer.host->setExcludeWindows(es);
         if (capturer.host.get())
             capturer.host->captureImage(rect);
     }
@@ -293,11 +298,11 @@ void CmymagsampleDlg::OnBnClickedButtonFindwind()
     _wndList.clear();
     _wndList = EnumerateWindows();
 
-    for (auto & wnd : _wndList) {
-        std::wstring title;
-        title = std::to_wstring(reinterpret_cast<int>(wnd.Hwnd())) + L"|" + wnd.Title() + L"|" + wnd.ClassName();
+    for (auto &wnd : _wndList) {
+        std::wstringstream ss;
+        ss << wnd.Hwnd() << "|" << wnd.Title() << wnd.ClassName();
 
-        int index = _wndListCombobox.AddString(title.c_str());
+        int index = _wndListCombobox.AddString(ss.str().c_str());
         if (wnd.Hwnd() == capturer.winID) {
             curSel = index;
         }
@@ -322,7 +327,7 @@ void CmymagsampleDlg::CaptureThread()
         auto interval = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         if (interval.count() >= 1000 / timer.fps)
             continue;
-        Sleep((1000 / timer.fps - interval.count()));
+        Sleep((DWORD)(1000LL / timer.fps - interval.count()));
     }
 }
 
@@ -341,22 +346,30 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
         return;
     }
     capturer.screenID = nullptr;
-    capturer.host.reset(new GDICapture());
+
+    //_PreviousHwnd = ::GetForegroundWindow();
+    //::SetForegroundWindow(capturer.winID);
+    //::BringWindowToTop(capturer.winID);
+
+    capturer.host = std::make_unique<GDICapture>();
     capturer.host->setCallback(CaptureCallback, this);
     if (!capturer.host->startCaptureWindow(capturer.winID)) {
-        capturer.host.reset(new MagCapture());
+        capturer.host = std::make_unique<MagCapture>();
         capturer.host->setCallback(CaptureCallback, this);
         if (!capturer.host->startCaptureWindow(capturer.winID)) {
             FlashWindowEx(FLASHW_ALL, 3, 300);
             return;
         }
     }
-    capturer.host->setExcludeWindows(GetSafeHwnd());
+    std::vector<HWND> es = { GetSafeHwnd() };
+    capturer.host->setExcludeWindows(es);
     
     if (render.render) {
         render.render.reset(nullptr);
     }
-    render.render.reset(new d3d11render);
+
+    render.render = std::make_unique<d3d11render>();
+
     render.render->init(_previewWnd.GetSafeHwnd());
     render.render->setMode(2);
 
@@ -386,10 +399,10 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     capturer.rect = DesktopRect::MakeRECT(settings.rect());
 
     capturer.winID = 0;
-    capturer.host.reset(new DXGICapture());
+    capturer.host = std::make_unique<DXGICapture>();
     capturer.host->setCallback(CaptureCallback, this);
     if (!capturer.host->startCaptureScreen(capturer.screenID)) {
-        capturer.host.reset(new GDICapture());
+        capturer.host = std::make_unique<GDICapture>();
         capturer.host->setCallback(CaptureCallback, this);
         if (!capturer.host->startCaptureScreen(capturer.screenID)) {
             FlashWindowEx(FLASHW_ALL, 3, 300);
@@ -400,7 +413,7 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     if (render.render) {
         render.render.reset(nullptr);
     }
-    render.render.reset(new d3d11render);
+    render.render = std::make_unique<d3d11render>();
     render.render->init(_previewWnd.GetSafeHwnd());
     render.render->setMode(2);
 
@@ -442,6 +455,8 @@ void CmymagsampleDlg::OnBnClickedBtnStop()
     }
 
     _previewWnd.InvalidateRect(NULL);
+
+    //::SetForegroundWindow(_PreviousHwnd);
 }
 
 
