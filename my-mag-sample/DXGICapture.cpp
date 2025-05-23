@@ -20,12 +20,13 @@ bool DXGICapture::_loadD3D11()
 
     HMODULE hm = LoadLibraryW(L"D3D11.dll");
     if (hm) {
-        fnD3D11CreateDevice = reinterpret_cast<pfD3D11CreateDevice>(GetProcAddress(hm, "D3D11CreateDevice"));
+        fnD3D11CreateDevice = reinterpret_cast<decltype(fnD3D11CreateDevice)>(GetProcAddress(hm, "D3D11CreateDevice"));
     }
 
     HMODULE hm2 = LoadLibraryW(L"DXGI.dll");
     if (hm2) {
-        fnCreateDXGIFactory1 = reinterpret_cast<pfCreateDXGIFactory1>(GetProcAddress(hm2, "CreateDXGIFactory1"));
+        fnCreateDXGIFactory1
+            = reinterpret_cast<decltype(fnCreateDXGIFactory1)>(GetProcAddress(hm2, "CreateDXGIFactory1"));
     }
 
     bRet = !!hm && !!fnD3D11CreateDevice && !!hm2 && !! fnCreateDXGIFactory1;
