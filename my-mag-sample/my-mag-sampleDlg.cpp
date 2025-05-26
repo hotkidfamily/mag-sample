@@ -4,11 +4,16 @@
 
 #include "stdafx.h"
 
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
+#include "WinVersionHelper.h"
 #include "Win32WindowEnumeration.h"
 #include "CapUtility.h"
 #include "MagCapture.h"
 #include "GDICapture.h"
 #include "DXGICapture.h"
+#include "WGCCapture.h"
 
 #include "my-mag-sample.h"
 #include "my-mag-sampleDlg.h"
@@ -347,11 +352,15 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
     }
     capturer.screenID = nullptr;
 
-    //_PreviousHwnd = ::GetForegroundWindow();
-    //::SetForegroundWindow(capturer.winID);
-    //::BringWindowToTop(capturer.winID);
-
-    capturer.host = std::make_unique<GDICapture>();
+    if (Platform::IsWin10_1903OrGreater()) {
+        capturer.host = std::make_unique<WGCCapture>();
+    }
+    else {
+        //_PreviousHwnd = ::GetForegroundWindow();
+        //::SetForegroundWindow(capturer.winID);
+        //::BringWindowToTop(capturer.winID);
+        capturer.host = std::make_unique<GDICapture>();
+    }
     capturer.host->setCallback(CaptureCallback, this);
     if (!capturer.host->startCaptureWindow(capturer.winID)) {
         capturer.host = std::make_unique<MagCapture>();
@@ -399,7 +408,15 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     capturer.rect = DesktopRect::MakeRECT(settings.rect());
 
     capturer.winID = 0;
-    capturer.host = std::make_unique<DXGICapture>();
+    if (Platform::IsWin10_1903OrGreater()) {
+        capturer.host = std::make_unique<WGCCapture>();
+    }
+    else if(Platform::IsWindows8OrGreater()){
+        capturer.host = std::make_unique<DXGICapture>();
+    }
+    else if (Platform::IsWindowsVistaOrGreater()) {
+        capturer.host = std::make_unique<MagCapture>();
+    }
     capturer.host->setCallback(CaptureCallback, this);
     if (!capturer.host->startCaptureScreen(capturer.screenID)) {
         capturer.host = std::make_unique<GDICapture>();
@@ -447,16 +464,20 @@ void CmymagsampleDlg::OnBnClickedBtnStop()
         timer.capThread.join();
     }
 
-    if (capture.host.get())
+    if (capture.host.get()) {
+        capture.host->stop();
         capture.host.reset(nullptr);
+    }
+        
 
     if (render.render) {
         render.render.reset(nullptr);
     }
 
     _previewWnd.InvalidateRect(NULL);
-
-    //::SetForegroundWindow(_PreviousHwnd);
+    if (!Platform::IsWin10_1903OrGreater()) {
+        //::SetForegroundWindow(_PreviousHwnd);
+    }
 }
 
 
