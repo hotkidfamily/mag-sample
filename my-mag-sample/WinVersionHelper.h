@@ -115,8 +115,10 @@ const OSVERSIONINFOEX &GetWindowsVersion()
 bool IsWindowsVersionOrGreater(WORD wMajorVersion, WORD wMinorVersion, WORD wServicePackMajor)
 {
     OSVERSIONINFOEX osvi = GetWindowsVersion();
-    if (osvi.dwMajorVersion >= wMajorVersion && osvi.dwMinorVersion >= wMinorVersion
-        && osvi.wServicePackMajor >= wServicePackMajor) {
+    if ( (osvi.dwMajorVersion >= wMajorVersion) 
+        || (osvi.dwMajorVersion == wMajorVersion && osvi.dwMinorVersion >= wMinorVersion) 
+        || (osvi.dwMajorVersion == wMajorVersion
+            && osvi.dwMinorVersion == wMinorVersion && osvi.wServicePackMajor >= wServicePackMajor)) {
         return true;
     }
     else {
