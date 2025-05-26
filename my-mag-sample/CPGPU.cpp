@@ -12,7 +12,7 @@ auto CreateD3D11Device(D3D_DRIVER_TYPE const type, UINT flags, Microsoft::WRL::C
                              nullptr, nullptr);
 }
 
-auto CreateD3D11Device(UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT)
+auto CreateD3D11Device(UINT flags)
 {
     Microsoft::WRL::ComPtr<ID3D11Device> device;
     HRESULT hr = CreateD3D11Device(D3D_DRIVER_TYPE_HARDWARE, flags, device);
