@@ -94,6 +94,7 @@ const OSVERSIONINFOEX &GetWindowsVersion()
                 osvi.wServicePackMinor = rtl_osvi.wServicePackMinor;
                 osvi.wSuiteMask = rtl_osvi.wSuiteMask;
                 osvi.wProductType = rtl_osvi.wProductType;
+                osvi.dwBuildNumber = rtl_osvi.dwBuildNumber;
             }
 
             g_osver_info.bCompatMode = (osvi.dwMajorVersion != g_osver_info.dwMajorVersion
