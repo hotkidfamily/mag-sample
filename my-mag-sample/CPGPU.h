@@ -13,4 +13,33 @@ auto CreateDXGISwapChain(Microsoft::WRL::ComPtr<ID3D11Device> const device,
                          uint32_t height,
                          DXGI_FORMAT format,
                          uint32_t bufferCount);
+HRESULT MakeTex(ID3D11Device *device,
+                       int w,
+                       int h,
+                       DXGI_FORMAT fmt,
+                       ID3D11Texture2D **text,
+                       D3D11_USAGE Usage,
+                       UINT BindFlags,
+                       UINT CPUAccessFlags);
+HRESULT MakeTexAndUAV(ID3D11Device *device,
+                             int w,
+                             int h,
+                             DXGI_FORMAT fmt,
+                             ID3D11Texture2D **text,
+                             ID3D11UnorderedAccessView **view,
+                             D3D11_USAGE usage,
+                             UINT bindflags,
+                             UINT cpuflags);
+HRESULT MakeUAV(ID3D11Device *device, ID3D11Texture2D *text, ID3D11UnorderedAccessView **view);
+HRESULT MakeConstBuffer(ID3D11Device *device, uint32_t size, void *initvalue, ID3D11Buffer **res);
+HRESULT MakeSRV(ID3D11Device *device, ID3D11Texture2D *text, ID3D11ShaderResourceView **res);
+HRESULT MakeTexAndSRV(ID3D11Device *device,
+                      int w,
+                      int h,
+                      DXGI_FORMAT fmt,
+                      ID3D11Texture2D **text,
+                      ID3D11ShaderResourceView **res,
+                      D3D11_USAGE usage,
+                      UINT bindflags,
+                      UINT cpuflags);
 };

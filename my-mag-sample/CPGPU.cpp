@@ -4,7 +4,123 @@
 namespace CPGPU
 {
 
+HRESULT MakeTex(ID3D11Device *device,
+                int w,
+                int h,
+                DXGI_FORMAT fmt,
+                ID3D11Texture2D **text,
+                D3D11_USAGE Usage,
+                UINT BindFlags,
+                UINT CPUAccessFlags)
+{
+    D3D11_TEXTURE2D_DESC desc;
+    ZeroMemory(&desc, sizeof(D3D11_TEXTURE2D_DESC));
+    desc.Width = w;
+    desc.Height = h;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Format = fmt;
+    desc.SampleDesc = { 1, 0 };
+    desc.Usage = Usage;
+    desc.BindFlags = BindFlags;
+    desc.CPUAccessFlags = CPUAccessFlags;
 
+    HRESULT hr = device->CreateTexture2D(&desc, NULL, text);
+    return hr;
+}
+
+HRESULT MakeTexAndUAV(ID3D11Device *device,
+                      int w,
+                      int h,
+                      DXGI_FORMAT fmt,
+                      ID3D11Texture2D **text,
+                      ID3D11UnorderedAccessView **view,
+                      D3D11_USAGE usage,
+                      UINT bindflags,
+                      UINT cpuflags)
+{
+    HRESULT hr = MakeTex(device, w, h, fmt, text, usage, bindflags, cpuflags);
+    if (SUCCEEDED(hr)) {
+        D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
+        ZeroMemory(&uavDesc, sizeof(uavDesc));
+        uavDesc.Format = fmt;
+        uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+        uavDesc.Texture2D.MipSlice = 0;
+        hr = device->CreateUnorderedAccessView(*text, &uavDesc, view);
+    }
+
+    return hr;
+}
+
+HRESULT MakeUAV(ID3D11Device *device, ID3D11Texture2D *text, ID3D11UnorderedAccessView **view)
+{
+    HRESULT hr = S_OK;
+    D3D11_TEXTURE2D_DESC desc;
+    ZeroMemory(&desc, sizeof(D3D11_TEXTURE2D_DESC));
+    text->GetDesc(&desc);
+    if (SUCCEEDED(hr)) {
+        D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
+        ZeroMemory(&uavDesc, sizeof(uavDesc));
+        uavDesc.Format = desc.Format;
+        uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+        uavDesc.Texture2D.MipSlice = 0;
+        hr = device->CreateUnorderedAccessView(text, &uavDesc, view);
+    }
+
+    return hr;
+}
+
+HRESULT MakeTexAndSRV(ID3D11Device *device,
+                      int w,
+                      int h,
+                      DXGI_FORMAT fmt,
+                      ID3D11Texture2D **text,
+                      ID3D11ShaderResourceView **res,
+                      D3D11_USAGE usage,
+                      UINT bindflags,
+                      UINT cpuflags)
+{
+    HRESULT hr = MakeTex(device, w, h, fmt, text, usage, bindflags, cpuflags);
+    if (SUCCEEDED(hr)) {
+        hr = MakeSRV(device, *text, res);
+    }
+    return hr;
+}
+
+HRESULT MakeSRV(ID3D11Device *device, ID3D11Texture2D *text, ID3D11ShaderResourceView **res)
+{
+    HRESULT hr = S_OK;
+    D3D11_TEXTURE2D_DESC desc;
+    ZeroMemory(&desc, sizeof(D3D11_TEXTURE2D_DESC));
+    text->GetDesc(&desc);
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC resourceDesc;
+    ZeroMemory(&resourceDesc, sizeof(resourceDesc));
+    resourceDesc.Texture2D.MostDetailedMip = 0;
+    resourceDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    resourceDesc.Texture2D.MipLevels = desc.MipLevels;
+    resourceDesc.Format = desc.Format;
+    hr = device->CreateShaderResourceView(text, &resourceDesc, res);
+
+    return hr;
+}
+
+HRESULT MakeConstBuffer(ID3D11Device *device, uint32_t size, void *initvalue, ID3D11Buffer **res)
+{
+    D3D11_BUFFER_DESC bd;
+    ZeroMemory(&bd, sizeof(bd));
+    bd.Usage = D3D11_USAGE_DYNAMIC;
+    bd.ByteWidth = size;
+    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+    D3D11_SUBRESOURCE_DATA InitData;
+    ZeroMemory(&InitData, sizeof(InitData));
+    InitData.pSysMem = initvalue;
+
+    auto hr = device->CreateBuffer(&bd, &InitData, res);
+    return hr;
+}
 
 auto CreateD3D11Device(D3D_DRIVER_TYPE const type, UINT flags, Microsoft::WRL::ComPtr<ID3D11Device> &device)
 {
