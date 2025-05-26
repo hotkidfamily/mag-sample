@@ -102,7 +102,7 @@ bool DXGICapture::_init(HMONITOR &hm)
         hDxgiOutput->GetDesc(&_outputDesc);
 
         ComPtr<IDXGIOutput1> hDxgiOutput1 = NULL;
-        hr = hDxgiOutput->QueryInterface(__uuidof(hDxgiOutput1), &hDxgiOutput1);
+        hr = hDxgiOutput.As(&hDxgiOutput1);
         if (FAILED(hr)) {
             break;
         }
@@ -205,7 +205,7 @@ bool DXGICapture::captureImage(const DesktopRect &rect)
     }
 
     ComPtr<ID3D11Texture2D> hAcquiredDesktopImage = NULL;
-    hr = hDesktopResource->QueryInterface(__uuidof(ID3D11Texture2D), &hAcquiredDesktopImage);
+    hr = hDesktopResource.As(&hAcquiredDesktopImage);
     if (FAILED(hr)) {
         return FALSE;
     }
@@ -279,7 +279,7 @@ bool DXGICapture::captureImage(const DesktopRect &rect)
 #endif
 
     ComPtr<IDXGISurface1> hStagingSurf = NULL;
-    hr = _destFrame->QueryInterface(__uuidof(IDXGISurface1), &hStagingSurf);
+    hr = _destFrame.As(&hStagingSurf);
     if (FAILED(hr)) {
         return FALSE;
     }
