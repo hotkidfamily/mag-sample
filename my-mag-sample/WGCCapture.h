@@ -46,6 +46,8 @@ class WGCCapture : public CCapture {
     winrt::Windows::Graphics::Capture::Direct3D11CaptureFramePool::FrameArrived_revoker _frame_arrived_revoker;
     winrt::com_ptr<ID3D11Texture2D> _tempTexture{ nullptr };
     winrt::Windows::Graphics::DirectX::Direct3D11::IDirect3DDevice _d3dDevice{ nullptr };
+    winrt::Windows::Graphics::SizeInt32 _curFramePoolSz{ 0 };
+
 
     std::thread _thread;
     bool _exit = true;
