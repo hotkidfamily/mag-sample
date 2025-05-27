@@ -86,6 +86,10 @@ bool IsWindowCapable(Window wnd)
         return false;
     }
 
+    if (!IsWindow(hwnd)) {
+        return false;
+    }
+
     if (!IsWindowVisible(hwnd)) {
         return false;
     }
