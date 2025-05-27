@@ -28,6 +28,9 @@ HRESULT d3d11render::init(HWND hwnd)
     UINT width = rc.Width();
     UINT height = rc.Height();
 
+    _hwndSz = { rc.Width(), rc.Height() };
+    _hwndSettingSz = _hwndSz;
+
     UINT createDeviceFlags = 0;
 #ifdef _DEBUG
     createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -75,7 +78,6 @@ HRESULT d3d11render::init(HWND hwnd)
         return hResult;
 
     hResult = _dev->CreateRenderTargetView(_mainText.Get(), NULL, &_mainRTV);
-
     if (FAILED(hResult))
         return hResult;
 
@@ -239,6 +241,31 @@ HRESULT d3d11render::display(const VideoFrame &frame)
     
     _updateTexture(frame);
 
+    if (_hwndSz != _hwndSettingSz) {
+        _mainRTV.Reset();
+        _mainText.Reset();
+        auto hr = _swapChain->ResizeBuffers(2, static_cast<uint32_t>(_hwndSettingSz.cx),
+                                        static_cast<uint32_t>(_hwndSettingSz.cy),
+                                            DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+
+        hr = _swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID *)&_mainText);
+        if (FAILED(hr))
+            return hr;
+
+        hr = _dev->CreateRenderTargetView(_mainText.Get(), NULL, &_mainRTV);
+        if (FAILED(hr))
+            return hr;
+
+        _hwndSz = _hwndSettingSz;
+
+        D3D11_VIEWPORT vp;
+        ZeroMemory(&vp, sizeof(D3D11_VIEWPORT));
+        vp.Height = (FLOAT)_hwndSz.cy;
+        vp.Width = (FLOAT)_hwndSz.cx;
+        vp.TopLeftX = 0;
+        vp.TopLeftY = 0;
+        _ctx->RSSetViewports(1, &vp);
+    }
 
     constexpr float ClearColor[4] = { 0.4f, 0.4f, 0.4f, 1.0f };
     _ctx->ClearRenderTargetView(_mainRTV.Get(), ClearColor);
@@ -357,6 +384,12 @@ void fast_unpack(char *rgba, const char *rgb, const int count)
     for (int j = 0; j < 3; ++j) {
         rgba[j] = rgb[j];
     }
+}
+
+HRESULT d3d11render::onResize(int cx, int cy)
+{
+    _hwndSettingSz = { cx, cy };
+    return S_OK;
 }
 
 HRESULT d3d11render::_updateTexture(const VideoFrame &frame)

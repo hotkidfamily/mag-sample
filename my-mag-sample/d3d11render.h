@@ -20,6 +20,8 @@ public:
         return S_OK;
     }
 
+    HRESULT onResize(int cx, int cy);
+
   private:
     HRESULT _updateTexture(const VideoFrame &frame);
     HRESULT _reallocTexture(CSize destBufSize, int destBufFormat);
@@ -54,6 +56,9 @@ public:
     D3D_FEATURE_LEVEL _featureLevel;
 
     HWND _hwnd = nullptr;
+    CSize _hwndSettingSz{ 0 };
+    CSize _hwndSz{ 0 };
+    
 
     VideoFrameType _curPixType = VideoFrameType::kVideoFrameTypeRGBA;
     CSize _curBuffSize;

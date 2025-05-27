@@ -1,13 +1,12 @@
 #include "stdafx.h"
 #include "WGCCapture.h"
 
+#include <functional>
+
+#include "CapUtility.h"
 #include "CPGPU.h"
 
-#include <functional>
-#include "CapUtility.h"
-
 #pragma comment(lib, "windowsapp.lib")
-
 
 using namespace winrt::Windows::Graphics::Capture;
 
@@ -130,11 +129,10 @@ void WGCCapture::_run()
     winrt::com_ptr<ID3D11Device> d3dDevice;
     winrt::check_hresult(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, D3D11_CREATE_DEVICE_BGRA_SUPPORT,
                                            nullptr, 0, D3D11_SDK_VERSION, d3dDevice.put(), nullptr, nullptr));
-    const auto dxgiDevice = d3dDevice.as<IDXGIDevice>();
+    winrt::com_ptr<IDXGIDevice> dxgiDevice = d3dDevice.as<IDXGIDevice>();
     winrt::com_ptr<IInspectable> inspectable;
     winrt::check_hresult(CreateDirect3D11DeviceFromDXGIDevice(dxgiDevice.get(), inspectable.put()));
-    const winrt::Windows::Graphics::DirectX::Direct3D11::IDirect3DDevice device
-        = inspectable.as<winrt::Windows::Graphics::DirectX::Direct3D11::IDirect3DDevice>();
+    auto device = inspectable.as<winrt::Windows::Graphics::DirectX::Direct3D11::IDirect3DDevice>();
 
     const auto activationFactory
         = winrt::get_activation_factory<winrt::Windows::Graphics::Capture::GraphicsCaptureItem>();
@@ -150,11 +148,8 @@ void WGCCapture::_run()
     }
     
     auto sz = captureItem.Size();
-    winrt::Windows::Graphics::Capture::Direct3D11CaptureFramePool framePool
-        = winrt::Windows::Graphics::Capture::Direct3D11CaptureFramePool::Create(
-            device, winrt::Windows::Graphics::DirectX::DirectXPixelFormat::B8G8R8A8UIntNormalized, 2,
-            captureItem.Size());
-
+    auto framePool = winrt::Windows::Graphics::Capture::Direct3D11CaptureFramePool::Create(
+        device, winrt::Windows::Graphics::DirectX::DirectXPixelFormat::B8G8R8A8UIntNormalized, 2, captureItem.Size());
     const auto session
         = framePool.CreateCaptureSession(captureItem);
     _frame_arrived_revoker = framePool.FrameArrived(winrt::auto_revoke, { this, &WGCCapture::_onFrameArrived });
@@ -163,9 +158,10 @@ void WGCCapture::_run()
     session.StartCapture();
 
     _session = session;
-    _dev = d3dDevice;
+    _d3d11device = d3dDevice;
     _framePool = framePool;
     _item = captureItem;
+    _d3dDevice = device;
 
     while (!_exit) {
         Sleep(10);
@@ -176,7 +172,7 @@ void WGCCapture::_run()
     _session.Close();
     winrt::uninit_apartment();
 }
-
+    
 void WGCCapture::_onFrameArrived(winrt::Windows::Graphics::Capture::Direct3D11CaptureFramePool const &sender,
                                  winrt::Windows::Foundation::IInspectable const &hander)
 {
@@ -184,30 +180,32 @@ void WGCCapture::_onFrameArrived(winrt::Windows::Graphics::Capture::Direct3D11Ca
     auto frame = sender.TryGetNextFrame();
     auto access = frame.Surface().as<Windows::Graphics::DirectX::Direct3D11::IDirect3DDxgiInterfaceAccess>();    
     access->GetInterface(winrt::guid_of<ID3D11Texture2D>(), texture.put_void());
-
+     
     winrt::com_ptr<ID3D11DeviceContext> ctx;
-    _dev->GetImmediateContext(ctx.put());
-    D3D11_TEXTURE2D_DESC capturedTextureDesc;
-    texture->GetDesc(&capturedTextureDesc);
+    _d3d11device->GetImmediateContext(ctx.put());
+    D3D11_TEXTURE2D_DESC desc;
+    texture->GetDesc(&desc);
 
-    capturedTextureDesc.Usage = D3D11_USAGE_STAGING;
-    capturedTextureDesc.BindFlags = 0;
-    capturedTextureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-    capturedTextureDesc.MiscFlags = 0;
+    //desc.Usage = D3D11_USAGE_STAGING;
+    //desc.BindFlags = 0;
+    //desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    //desc.MiscFlags = 0;
 
-    winrt::com_ptr<ID3D11Texture2D> userTexture = nullptr;
-    winrt::check_hresult(_dev->CreateTexture2D(&capturedTextureDesc, NULL, userTexture.put()));
+    //winrt::com_ptr<ID3D11Texture2D> userTexture = nullptr;
+    //winrt::check_hresult(_dev->CreateTexture2D(&desc, NULL, userTexture.put()));
 
-    ctx->CopyResource(userTexture.get(), texture.get());
+    winrt::check_hresult(CPGPU::MakeTex(_d3d11device.get(), desc.Width, desc.Height, desc.Format, _tempTexture.put(),
+                                        D3D11_USAGE_STAGING, 0, D3D11_CPU_ACCESS_READ));
 
+    ctx->CopyResource(_tempTexture.get(), texture.get());
     D3D11_MAPPED_SUBRESOURCE resource;
-    winrt::check_hresult(ctx->Map(userTexture.get(), NULL, D3D11_MAP_READ, 0, &resource));
+    winrt::check_hresult(ctx->Map(_tempTexture.get(), NULL, D3D11_MAP_READ, 0, &resource));
     {
         D3D11_TEXTURE2D_DESC desc{0};
-        userTexture->GetDesc(&desc);
+        _tempTexture->GetDesc(&desc);
         onCaptured(resource, desc);
     }
-    ctx->Unmap(userTexture.get(), 0);
+    ctx->Unmap(_tempTexture.get(), 0);
     return;
 
 }

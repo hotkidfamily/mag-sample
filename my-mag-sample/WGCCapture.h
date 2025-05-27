@@ -33,19 +33,19 @@ class WGCCapture : public CCapture {
 
     bool onCaptured(D3D11_MAPPED_SUBRESOURCE &rect, D3D11_TEXTURE2D_DESC &header);
 
-    void _onFrameArrived(winrt::Windows::Graphics::Capture::Direct3D11CaptureFramePool const &sender,
-                      winrt::Windows::Foundation::IInspectable const &);
-    void _run();
-
   private:
+    void _onFrameArrived(winrt::Windows::Graphics::Capture::Direct3D11CaptureFramePool const &sender,
+                         winrt::Windows::Foundation::IInspectable const &);
+    void _run();
 
   private:
     winrt::Windows::Graphics::Capture::GraphicsCaptureItem _item{ nullptr };
     winrt::Windows::Graphics::Capture::Direct3D11CaptureFramePool _framePool{ nullptr };
     winrt::Windows::Graphics::Capture::GraphicsCaptureSession _session{ nullptr };
-    winrt::com_ptr<ID3D11Device> _dev{ nullptr };
+    winrt::com_ptr<ID3D11Device> _d3d11device{ nullptr };
     winrt::Windows::Graphics::Capture::Direct3D11CaptureFramePool::FrameArrived_revoker _frame_arrived_revoker;
     winrt::com_ptr<ID3D11Texture2D> _tempTexture{ nullptr };
+    winrt::Windows::Graphics::DirectX::Direct3D11::IDirect3DDevice _d3dDevice{ nullptr };
 
     std::thread _thread;
     bool _exit = true;

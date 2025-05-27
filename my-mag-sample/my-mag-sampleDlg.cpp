@@ -77,6 +77,7 @@ CmymagsampleDlg::CmymagsampleDlg(CWnd* pParent /*=NULL*/)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
     _appContext = std::make_unique<AppContext>();
+    _appContext->timer.fps = KDefaultFPS;
 }
 
 void CmymagsampleDlg::DoDataExchange(CDataExchange* pDX)
@@ -85,6 +86,7 @@ void CmymagsampleDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_COMBO_WNDLIST, _wndListCombobox);
     DDX_Control(pDX, IDC_STATIC_PVWWND, _previewWnd);
     DDX_Control(pDX, IDC_STATIC_WININFO, _winRectInfoText);
+    DDX_Control(pDX, IDC_COMBO_SYSTEM, _sysComboBox);
 }
 
 BEGIN_MESSAGE_MAP(CmymagsampleDlg, CDialogEx)
@@ -145,6 +147,20 @@ BOOL CmymagsampleDlg::OnInitDialog()
     std::wstring title = L"my-mag-sample - " + std::to_wstring(pid);
     SetWindowTextW(title.c_str());
 
+    std::vector<std::wstring> systemList = { L"Win11",      // 0
+                                             L"Win10-1903", // 1
+                                             L"Win10",      // 2
+                                             L"Win8.1",     // 3
+                                             L"Win8",       // 4
+                                             L"Win7SP1",    // 5
+                                             L"Win7",       // 6
+                                             L"WInVista",   // 7
+                                             L"WInXP" };    // 8
+
+    for (auto &it : systemList) {
+        _sysComboBox.AddString(it.c_str());
+    }
+    _sysComboBox.SetCurSel(0);
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -341,6 +357,7 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
     auto &timer = _appContext->timer;
     auto &capturer = _appContext->capturer;
     auto &render = _appContext->render;
+    auto idx = _sysComboBox.GetCurSel();
 
     OnBnClickedBtnStop();
 
@@ -352,18 +369,21 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
     }
     capturer.screenID = nullptr;
 
-    if (Platform::IsWin10_1903OrGreater()) {
+    if (Platform::IsWin10_1903OrGreater() && idx < 2) {
         capturer.host = std::make_unique<WGCCapture>();
     }
-    else {
+    else if (Platform::IsWindowsVistaOrGreater() && idx < 8) {
         //_PreviousHwnd = ::GetForegroundWindow();
         //::SetForegroundWindow(capturer.winID);
         //::BringWindowToTop(capturer.winID);
+        capturer.host = std::make_unique<MagCapture>();
+    }
+    else {
         capturer.host = std::make_unique<GDICapture>();
     }
     capturer.host->setCallback(CaptureCallback, this);
     if (!capturer.host->startCaptureWindow(capturer.winID)) {
-        capturer.host = std::make_unique<MagCapture>();
+        capturer.host = std::make_unique<GDICapture>();
         capturer.host->setCallback(CaptureCallback, this);
         if (!capturer.host->startCaptureWindow(capturer.winID)) {
             FlashWindowEx(FLASHW_ALL, 3, 300);
@@ -401,6 +421,8 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     auto &capturer = _appContext->capturer;
     auto &render = _appContext->render;
 
+    auto idx = _sysComboBox.GetCurSel();
+
     OnBnClickedBtnStop();
 
     capturer.screenID = MonitorFromWindow(GetSafeHwnd(), MONITOR_DEFAULTTONEAREST);
@@ -408,14 +430,17 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     capturer.rect = DesktopRect::MakeRECT(settings.rect());
 
     capturer.winID = 0;
-    if (Platform::IsWin10_1903OrGreater()) {
+    if (Platform::IsWin10_1903OrGreater() && idx<2) {
         capturer.host = std::make_unique<WGCCapture>();
     }
-    else if(Platform::IsWindows8OrGreater()){
+    else if (Platform::IsWindows8OrGreater() && idx < 5) {
         capturer.host = std::make_unique<DXGICapture>();
     }
-    else if (Platform::IsWindowsVistaOrGreater()) {
+    else if (Platform::IsWindowsVistaOrGreater() && idx < 8) {
         capturer.host = std::make_unique<MagCapture>();
+    }
+    else {
+        capturer.host = std::make_unique<GDICapture>();
     }
     capturer.host->setCallback(CaptureCallback, this);
     if (!capturer.host->startCaptureScreen(capturer.screenID)) {
@@ -434,7 +459,6 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     render.render->init(_previewWnd.GetSafeHwnd());
     render.render->setMode(2);
 
-    timer.fps = 120;
     timer.timerID = TIMER_SCREEN_CAPTURE;
 
     if (capturer.host->usingTimer()) {
@@ -531,6 +555,9 @@ void CmymagsampleDlg::OnCbnSelchangeComboWndlist()
 
 void CmymagsampleDlg::OnSize(UINT nType, int cx, int cy)
 {
+    if (_appContext->render.render) {
+        _appContext->render.render->onResize(cx, cy);
+    }
     CDialogEx::OnSize(nType, cx, cy);
 }
 
