@@ -220,6 +220,12 @@ void WGCCapture::_onFrameArrived(winrt::Windows::Graphics::Capture::Direct3D11Ca
     winrt::com_ptr<ID3D11Texture2D> texture;
     auto frame = sender.TryGetNextFrame();
     auto contentSz = frame.ContentSize();
+
+    if (_curFramePoolSz.Width != contentSz.Width || _curFramePoolSz.Height != contentSz.Height) {
+        _curFramePoolSz = contentSz;
+        _framePool.Recreate(_d3dDevice, winrt::Windows::Graphics::DirectX::DirectXPixelFormat::B8G8R8A8UIntNormalized, 2, contentSz);
+    }
+
     auto access = frame.Surface().as<Windows::Graphics::DirectX::Direct3D11::IDirect3DDxgiInterfaceAccess>();
     access->GetInterface(winrt::guid_of<ID3D11Texture2D>(), texture.put_void());
 
