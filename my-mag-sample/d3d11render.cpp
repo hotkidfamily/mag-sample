@@ -373,7 +373,7 @@ HRESULT d3d11render::_reallocTexture(CSize destBufSize, int dformat)
     return hRet;
 }
 
-void fast_unpack(char *rgba, const char *rgb, const int count)
+static void fast_unpack(char *rgba, const char *rgb, const int count)
 {
     if (count == 0)
         return;
