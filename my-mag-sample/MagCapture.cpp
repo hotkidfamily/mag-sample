@@ -158,7 +158,7 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
     } while (0);
     
     if (!result) {
-        logger::log(LogLevel::Error, "init magnifier failed %s", info);
+        logger::logError("init magnifier failed %s", info);
         destoryMagnifier();
     }
     else {
@@ -289,7 +289,7 @@ bool MagCapture::captureImage(const DesktopRect& capRect)
         }
     } __except (EXCEPTION_EXECUTE_HANDLER) {
         bRet = false;
-        logger::log(LogLevel::Info, "exception");
+        logger::logInfo("exception");
     }
 
     return bRet;

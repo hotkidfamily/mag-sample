@@ -34,7 +34,7 @@ bool GDICapture::startCaptureWindow(HWND hWnd)
 
     bRet = _monitorDC && _compatibleDC;
     if (!bRet)
-        logger::log(LogLevel::Info, "monitor DC %x, compatible DC %x, bRet %d", _monitorDC, _compatibleDC, bRet);
+        logger::logInfo("monitor DC %x, compatible DC %x, bRet %d", _monitorDC, _compatibleDC, bRet);
 
     return bRet;
 }
@@ -54,7 +54,7 @@ bool GDICapture::startCaptureScreen(HMONITOR hMonitor)
 
     bRet = _monitorDC && _compatibleDC;
     if (!bRet)
-        logger::log(LogLevel::Info, "monitor DC %x, compatible DC %x, bRet %d", _monitorDC, _compatibleDC, bRet);
+        logger::logInfo("monitor DC %x, compatible DC %x, bRet %d", _monitorDC, _compatibleDC, bRet);
 
     return bRet;
 }

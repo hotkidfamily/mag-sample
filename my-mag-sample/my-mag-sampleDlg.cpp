@@ -4,8 +4,16 @@
 
 #include "stdafx.h"
 
+#include <stdexcept>
+#include <set>
+#include <chrono>
+#include <sstream>
+#include <functional>
+#include <iostream>
+
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <dwmapi.h>
 
 #include "WinVersionHelper.h"
 #include "Win32WindowEnumeration.h"
@@ -19,12 +27,8 @@
 #include "my-mag-sampleDlg.h"
 #include "afxdialogex.h"
 
-#include <stdexcept>
-#include <set>
-#include <chrono>
-#include <sstream>
+#include "logger.h"
 
-#include <dwmapi.h>
 #pragma comment(lib, "dwmapi.lib")
 
 #ifdef _DEBUG
@@ -217,7 +221,8 @@ HCURSOR CmymagsampleDlg::OnQueryDragIcon()
 void CmymagsampleDlg::OnCaptureFrame(VideoFrame *frame)
 {
     auto &render = _appContext->render;
-    render.render->display(*frame);
+    render.d3d11render->display(*frame);
+    render.statics->append();
 }
 
 void CaptureCallback(VideoFrame *frame, void *args)
@@ -228,7 +233,7 @@ void CaptureCallback(VideoFrame *frame, void *args)
 
 LRESULT CmymagsampleDlg::OnDPIChanged(WPARAM wParam, LPARAM lParam)
 {
-    auto &capturer = _appContext->capturer;
+    auto &cpt = _appContext->cpt;
 
     long dpi = LOWORD(wParam);
     RECT newRect = *(reinterpret_cast<const RECT *>(lParam));
@@ -239,16 +244,16 @@ LRESULT CmymagsampleDlg::OnDPIChanged(WPARAM wParam, LPARAM lParam)
 LRESULT CmymagsampleDlg::OnDisplayChanged(WPARAM wParam, LPARAM lParam)
 {
     lParam = lParam;
-    auto &capturer = _appContext->capturer;
+    auto &cpt = _appContext->cpt;
 
-    capturer.rect.set_width(LOWORD(lParam));
-    capturer.rect.set_width(HIWORD(lParam));
+    cpt.rect.set_width(LOWORD(lParam));
+    cpt.rect.set_width(HIWORD(lParam));
 
-    if (capturer.host.get()) {
-        if (capturer.winID) {
+    if (cpt.host.get()) {
+        if (cpt.winID) {
             OnBnClickedBtnWndcap();
         }
-        else if (capturer.screenID) {
+        else if (cpt.screenID) {
             OnBnClickedBtnScreencap();
         }
     }
@@ -259,14 +264,14 @@ LRESULT CmymagsampleDlg::OnDisplayChanged(WPARAM wParam, LPARAM lParam)
 LRESULT CmymagsampleDlg::OnUserDefinedMessage(WPARAM wParam, LPARAM lParam)
 {
     auto &timer = _appContext->timer;
-    auto &capturer = _appContext->capturer;
+    auto &cpt = _appContext->cpt;
 
     if (timer.timerID == TIMER_SCREEN_CAPTURE) {
-        DesktopRect rect = capturer.rect;
+        DesktopRect rect = cpt.rect;
         std::vector<HWND> es = { GetSafeHwnd() };
-        capturer.host->setExcludeWindows(es);
-        if (capturer.host.get())
-            capturer.host->captureImage(rect);
+        cpt.host->setExcludeWindows(es);
+        if (cpt.host.get())
+            cpt.host->captureImage(rect);
     }
 
     return 1;
@@ -274,38 +279,38 @@ LRESULT CmymagsampleDlg::OnUserDefinedMessage(WPARAM wParam, LPARAM lParam)
 
 void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
 {
-    auto &capturer = _appContext->capturer;
-
+    auto &cpt = _appContext->cpt;
+    cpt.statics->append();
     if (TIMER_WINDOW_CAPTURE == nIDEvent) {
         RECT wRect;
-        HWND &hWnd = capturer.winID;
+        HWND &hWnd = cpt.winID;
         CapUtility::GetWindowRect(hWnd, wRect);
 
         HMONITOR hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
         CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(hMonitor);
         DesktopRect monitorRect = DesktopRect::MakeRECT(settings.rect());
 
-        capturer.rect = DesktopRect::MakeRECT(wRect);
-        if (capturer.rect.width() > monitorRect.width()) { // out of screen
-            capturer.rect.IntersectWith(monitorRect);
+        cpt.rect = DesktopRect::MakeRECT(wRect);
+        if (cpt.rect.width() > monitorRect.width()) { // out of screen
+            cpt.rect.IntersectWith(monitorRect);
         }
 
         std::vector<HWND> wndList = CapUtility::getWindowsCovered(hWnd);
 
         if (CapUtility::isWndCanCap(hWnd)) {
-            DesktopRect &rect = capturer.rect;
-            if (capturer.host.get()) {
-                capturer.host->setExcludeWindows(wndList);
-                capturer.host->captureImage(rect);
+            DesktopRect &rect = cpt.rect;
+            if (cpt.host.get()) {
+                cpt.host->setExcludeWindows(wndList);
+                cpt.host->captureImage(rect);
             }
         }
     }
     else if (TIMER_SCREEN_CAPTURE == nIDEvent) {
-        DesktopRect rect = capturer.rect;
+        DesktopRect rect = cpt.rect;
         std::vector<HWND> es = { GetSafeHwnd() };
-        capturer.host->setExcludeWindows(es);
-        if (capturer.host.get())
-            capturer.host->captureImage(rect);
+        cpt.host->setExcludeWindows(es);
+        if (cpt.host.get())
+            cpt.host->captureImage(rect);
     }
 }
 
@@ -313,7 +318,7 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
 void CmymagsampleDlg::OnBnClickedButtonFindwind()
 {
     int curSel = 0;
-    auto &capturer = _appContext->capturer;
+    auto &cpt = _appContext->cpt;
 
     _wndListCombobox.ResetContent();
     _wndList.clear();
@@ -324,7 +329,7 @@ void CmymagsampleDlg::OnBnClickedButtonFindwind()
         ss << wnd.Hwnd() << "|" << wnd.Title() << wnd.ClassName();
 
         int index = _wndListCombobox.AddString(ss.str().c_str());
-        if (wnd.Hwnd() == capturer.winID) {
+        if (wnd.Hwnd() == cpt.winID) {
             curSel = index;
         }
     }
@@ -332,141 +337,165 @@ void CmymagsampleDlg::OnBnClickedButtonFindwind()
     _wndListCombobox.SetCurSel(curSel);
 }
 
-void captureThread(CmymagsampleDlg *args)
-{
-    CmymagsampleDlg *pthis = (CmymagsampleDlg *)args;
-    pthis->CaptureThread();
-}
-
 void CmymagsampleDlg::CaptureThread()
 {
+    auto &rd = _appContext->render;
+    auto &cpt = _appContext->cpt;
     auto &timer = _appContext->timer;
+
+    std::chrono::steady_clock::time_point start = std::chrono::high_resolution_clock::now();
+    auto frame_interval = 1000LL / timer.fps;
+    auto logStart = start;
+
     while (timer.bRunning) {
-        std::chrono::steady_clock::time_point start = std::chrono::high_resolution_clock::now();
         OnTimer(timer.timerID);
         std::chrono::steady_clock::time_point end = std::chrono::high_resolution_clock::now();
         auto interval = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        if (interval.count() >= 1000 / timer.fps)
+        if (interval.count() >= frame_interval) {
+            start = end;
             continue;
-        Sleep((DWORD)(1000LL / timer.fps - interval.count()));
+        }
+            
+        auto next = frame_interval - interval.count();
+        std::this_thread::sleep_for(std::chrono::milliseconds(next));
+        start = end;
+
+        auto log_interval = std::chrono::duration_cast<std::chrono::milliseconds>(end - logStart);
+        if (log_interval.count() >= 1000) 
+        {
+            logStart = end;
+            uint64_t min = 0, max = 0;
+            cpt.statics->minMax(min, max);
+            uint64_t rmin = 0, rmax = 0;
+            rd.statics->minMax(rmin, rmax);
+            logger::logInfo("cpt: %0.2f/%lld/%lld  render: %0.2f/%lld/%lld\n", cpt.statics->fps(), min, max,
+                            rd.statics->fps(), rmin, rmax);
+        }
     }
 }
 
 void CmymagsampleDlg::OnBnClickedBtnWndcap()
 {
     auto &timer = _appContext->timer;
-    auto &capturer = _appContext->capturer;
+    auto &cpt = _appContext->cpt;
     auto &render = _appContext->render;
     auto idx = _sysComboBox.GetCurSel();
 
     OnBnClickedBtnStop();
 
     try {
-        capturer.winID = _wndList.at(_wndListCombobox.GetCurSel()).Hwnd();
+        cpt.winID = _wndList.at(_wndListCombobox.GetCurSel()).Hwnd();
     }
     catch (std::out_of_range &e) {
         return;
     }
-    capturer.screenID = nullptr;
+    cpt.screenID = nullptr;
 
     if (Platform::IsWin10_1903OrGreater() && idx < 2) {
-        capturer.host = std::make_unique<WGCCapture>();
+        cpt.host = std::make_unique<WGCCapture>();
     }
     else if (Platform::IsWindowsVistaOrGreater() && idx < 8) {
         //_PreviousHwnd = ::GetForegroundWindow();
         //::SetForegroundWindow(capturer.winID);
         //::BringWindowToTop(capturer.winID);
-        capturer.host = std::make_unique<MagCapture>();
+        cpt.host = std::make_unique<MagCapture>();
     }
     else {
-        capturer.host = std::make_unique<GDICapture>();
+        cpt.host = std::make_unique<GDICapture>();
     }
-    capturer.host->setCallback(CaptureCallback, this);
-    if (!capturer.host->startCaptureWindow(capturer.winID)) {
-        capturer.host = std::make_unique<GDICapture>();
-        capturer.host->setCallback(CaptureCallback, this);
-        if (!capturer.host->startCaptureWindow(capturer.winID)) {
+    cpt.host->setCallback(CaptureCallback, this);
+    cpt.statics = std::make_unique<utils::SlidingWindow>(2000);
+    if (!cpt.host->startCaptureWindow(cpt.winID)) {
+        cpt.host = std::make_unique<GDICapture>();
+        cpt.host->setCallback(CaptureCallback, this);
+        if (!cpt.host->startCaptureWindow(cpt.winID)) {
             FlashWindowEx(FLASHW_ALL, 3, 300);
             return;
         }
     }
     std::vector<HWND> es = { GetSafeHwnd() };
-    capturer.host->setExcludeWindows(es);
+    cpt.host->setExcludeWindows(es);
     
-    if (render.render) {
-        render.render.reset(nullptr);
+    if (render.d3d11render) {
+        render.d3d11render.reset();
+        render.statics.reset();
     }
 
-    render.render = std::make_unique<d3d11render>();
+    render.d3d11render = std::make_unique<d3d11render>();
+    render.statics = std::make_unique<utils::SlidingWindow>(2000);
 
-    render.render->init(_previewWnd.GetSafeHwnd());
-    render.render->setMode(2);
+    render.d3d11render->init(_previewWnd.GetSafeHwnd());
+    render.d3d11render->setMode(2);
 
     timer.fps = KDefaultFPS;
     timer.timerID = TIMER_WINDOW_CAPTURE;
 
-    if (capturer.host->usingTimer()) {
+    if (cpt.host->usingTimer()) {
         timer.timerInst = SetTimer(timer.timerID, 1000 / timer.fps, NULL);
     }
     else
     {
         timer.bRunning = true;
-        timer.capThread = std::thread(captureThread, this);
+        timer.capThread = std::thread(std::bind(&CmymagsampleDlg::CaptureThread, this));
     }
 }
 
 void CmymagsampleDlg::OnBnClickedBtnScreencap()
 {
     auto &timer = _appContext->timer;
-    auto &capturer = _appContext->capturer;
+    auto &cpt = _appContext->cpt;
     auto &render = _appContext->render;
 
     auto idx = _sysComboBox.GetCurSel();
 
     OnBnClickedBtnStop();
 
-    capturer.screenID = MonitorFromWindow(GetSafeHwnd(), MONITOR_DEFAULTTONEAREST);
-    CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(capturer.screenID);
-    capturer.rect = DesktopRect::MakeRECT(settings.rect());
+    cpt.screenID = MonitorFromWindow(GetSafeHwnd(), MONITOR_DEFAULTTONEAREST);
+    CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(cpt.screenID);
+    cpt.rect = DesktopRect::MakeRECT(settings.rect());
 
-    capturer.winID = 0;
+    cpt.winID = 0;
     if (Platform::IsWin10_1903OrGreater() && idx<2) {
-        capturer.host = std::make_unique<WGCCapture>();
+        cpt.host = std::make_unique<WGCCapture>();
     }
     else if (Platform::IsWindows8OrGreater() && idx < 5) {
-        capturer.host = std::make_unique<DXGICapture>();
+        cpt.host = std::make_unique<DXGICapture>();
     }
     else if (Platform::IsWindowsVistaOrGreater() && idx < 8) {
-        capturer.host = std::make_unique<MagCapture>();
+        cpt.host = std::make_unique<MagCapture>();
     }
     else {
-        capturer.host = std::make_unique<GDICapture>();
+        cpt.host = std::make_unique<GDICapture>();
     }
-    capturer.host->setCallback(CaptureCallback, this);
-    if (!capturer.host->startCaptureScreen(capturer.screenID)) {
-        capturer.host = std::make_unique<GDICapture>();
-        capturer.host->setCallback(CaptureCallback, this);
-        if (!capturer.host->startCaptureScreen(capturer.screenID)) {
+    cpt.statics = std::make_unique<utils::SlidingWindow>(2000);
+    cpt.host->setCallback(CaptureCallback, this);
+    if (!cpt.host->startCaptureScreen(cpt.screenID)) {
+        cpt.host = std::make_unique<GDICapture>();
+        cpt.host->setCallback(CaptureCallback, this);
+        if (!cpt.host->startCaptureScreen(cpt.screenID)) {
             FlashWindowEx(FLASHW_ALL, 3, 300);
             return;
         }
     }
 
-    if (render.render) {
-        render.render.reset(nullptr);
+    if (render.d3d11render) {
+        render.d3d11render.reset();
+        render.statics.reset();
     }
-    render.render = std::make_unique<d3d11render>();
-    render.render->init(_previewWnd.GetSafeHwnd());
-    render.render->setMode(2);
+
+    render.d3d11render = std::make_unique<d3d11render>();
+    render.statics = std::make_unique<utils::SlidingWindow>(2000);
+    render.d3d11render->init(_previewWnd.GetSafeHwnd());
+    render.d3d11render->setMode(2);
 
     timer.timerID = TIMER_SCREEN_CAPTURE;
 
-    if (capturer.host->usingTimer()) {
+    if (cpt.host->usingTimer()) {
         timer.timerInst = SetTimer(timer.timerID, 1000 / timer.fps, NULL);
     }
     else {
         timer.bRunning = true;
-        timer.capThread = std::thread(captureThread, this);
+        timer.capThread = std::thread(std::bind(&CmymagsampleDlg::CaptureThread, this));
     }
 }
 
@@ -474,7 +503,7 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
 void CmymagsampleDlg::OnBnClickedBtnStop()
 {
     auto &timer = _appContext->timer;
-    auto &capture = _appContext->capturer;
+    auto &cpt = _appContext->cpt;
     auto &render = _appContext->render;
 
     timer.bRunning = false;
@@ -488,14 +517,14 @@ void CmymagsampleDlg::OnBnClickedBtnStop()
         timer.capThread.join();
     }
 
-    if (capture.host.get()) {
-        capture.host->stop();
-        capture.host.reset(nullptr);
+    if (cpt.host.get()) {
+        cpt.host->stop();
+        cpt.host.reset(nullptr);
     }
         
 
-    if (render.render) {
-        render.render.reset(nullptr);
+    if (render.d3d11render) {
+        render.d3d11render.reset(nullptr);
     }
 
     _previewWnd.InvalidateRect(NULL);
@@ -555,8 +584,8 @@ void CmymagsampleDlg::OnCbnSelchangeComboWndlist()
 
 void CmymagsampleDlg::OnSize(UINT nType, int cx, int cy)
 {
-    if (_appContext->render.render) {
-        _appContext->render.render->onResize(cx, cy);
+    if (_appContext->render.d3d11render) {
+        _appContext->render.d3d11render->onResize(cx, cy);
     }
     CDialogEx::OnSize(nType, cx, cy);
 }

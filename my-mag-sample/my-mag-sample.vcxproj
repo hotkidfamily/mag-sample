@@ -222,6 +222,7 @@
     <ClInclude Include="my-mag-sample.h" />
     <ClInclude Include="my-mag-sampleDlg.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="SlidingWindow.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="VideoFrame.h" />

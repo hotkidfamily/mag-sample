@@ -19,7 +19,7 @@ WGCCapture::WGCCapture()
 
 WGCCapture::~WGCCapture()
 {
-    _action = ACTION::ACTION_Idle;
+    _action = ACTION::ACTION_Stop;
     _exit = true;
     if (_thread.joinable()) {
         _thread.join();
@@ -269,6 +269,8 @@ void WGCCapture::_run()
             break;
         }
     }
+
+    _stopSession();
 
     winrt::uninit_apartment();
 }

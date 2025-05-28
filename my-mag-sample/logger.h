@@ -13,6 +13,9 @@ enum class LogLevel : int
 
 class logger {
   public:
+    static void logInfo(const char *fmt, ...);
+    static void logError(const char *fmt, ...);
+    static void logWarning(const char *fmt, ...);
     static void log(LogLevel level, const char *fmt, ...);
 };
 
