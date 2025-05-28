@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "logger.h"
+#include <iostream>
 
 static LogLevel g_logLevel = LogLevel::Info;
 const int kMaxLogSize = 2048;
@@ -15,5 +16,5 @@ void logger::log(LogLevel level, const char *fmt, ...)
     _vsnprintf_s(msg, kMaxLogSize, fmt, vl);
     va_end(vl);
 
-    OutputDebugStringA(msg);
+    std::cout<< msg;
 }

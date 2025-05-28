@@ -10,6 +10,7 @@
 #define new DEBUG_NEW
 #endif
 
+#define _ENABLE_COMSOLE 1
 
 // CmymagsampleApp
 
@@ -27,6 +28,11 @@ CmymagsampleApp::CmymagsampleApp()
 
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
+#ifdef _ENABLE_COMSOLE
+    AllocConsole();
+    // system("chcp 65001"); //support utf8 display
+    freopen_s((FILE **)stdout, "CONOUT$", "w", stdout);
+#endif
 }
 
 
@@ -50,7 +56,6 @@ BOOL CmymagsampleApp::InitInstance()
 	InitCommonControlsEx(&InitCtrls);
 
 	CWinApp::InitInstance();
-
 
 	// Create the shell manager, in case the dialog contains
 	// any shell tree view or shell list view controls.
@@ -100,5 +105,13 @@ BOOL CmymagsampleApp::InitInstance()
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.
 	return FALSE;
+}
+
+int CmymagsampleApp::ExitInstance()
+{
+#ifdef _ENABLE_COMSOLE
+	FreeConsole();
+#endif
+    return CWinApp::ExitInstance();
 }
 
