@@ -61,6 +61,25 @@ inline bool IsWindowDisabled(HWND hwnd)
     return (style & WS_DISABLED) == WS_DISABLED;
 }
 
+inline bool IsTransparentWindow(HWND hwnd)
+{
+    auto style = GetWindowLong(hwnd, GWL_EXSTYLE);
+    return (style & WS_EX_TRANSPARENT) == WS_EX_TRANSPARENT;
+}
+
+inline bool IsExLayderedWindow(HWND hwnd)
+{
+    auto style = GetWindowLong(hwnd, GWL_EXSTYLE);
+    return (style & WS_EX_LAYERED) == WS_EX_LAYERED;
+}
+
+inline bool IsToolWindow(HWND hwnd)
+{
+    auto style = GetWindowLong(hwnd, GWL_EXSTYLE);
+    return (  ((style & WS_EX_TOOLWINDOW) == WS_EX_TOOLWINDOW) 
+             || ((style & WS_EX_NOACTIVATE) == WS_EX_NOACTIVATE) );
+}
+
 
 inline bool IsWindowCloaked(Window wnd)
 {
@@ -75,10 +94,10 @@ inline bool IsWindowCloaked(Window wnd)
     return ret;
 }
 
-inline bool IsInvalidWindowSize(Window wnd)
+inline bool IsInvalidWindowSize(HWND hwnd)
 {
     RECT rect;
-    GetWindowRect(wnd.Hwnd(), &rect);
+    GetWindowRect(hwnd, &rect);
     return !!IsRectEmpty(&rect);
 }
 
@@ -101,6 +120,10 @@ static bool IsWindowCapable(Window wnd)
         return false;
     }
 
+    if (IsWindowCloaked(wnd)) {
+        return false;
+    }
+
     if (IsWindowExcludeFromCapture(hwnd)) {
         return false;
     }
@@ -113,7 +136,19 @@ static bool IsWindowCapable(Window wnd)
         return false;
     }
 
+    if (IsInvalidWindowSize(hwnd)) {
+        return false;
+    }
+
     if (IsWindowDisabled(hwnd)) {
+        return false;
+    }
+
+    if (IsExLayderedWindow(hwnd) && IsTransparentWindow(hwnd)) {
+        return false;
+    }
+
+    if (IsToolWindow(hwnd)) {
         return false;
     }
 
@@ -130,19 +165,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
     {
         return TRUE;
     }
-
-    if (IsInvalidWindowSize(window)) {
-        return TRUE;
-    }
-
-    if (IsWindowCloaked(window)) {
-        return TRUE;
-    }
-    
-    LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-    if (exStyle & WS_EX_TOOLWINDOW) {
-        return TRUE;
-    }
+   
 
     std::vector<Window>& windows = *reinterpret_cast<std::vector<Window>*>(lParam);
     windows.push_back(window);
