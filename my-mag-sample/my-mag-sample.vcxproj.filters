@@ -72,9 +72,6 @@
     <ClInclude Include="d3d11render.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gpukits.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="WGCCapture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -120,9 +117,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="d3d11render.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="gpukits.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WGCCapture.cpp">

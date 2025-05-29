@@ -215,7 +215,6 @@
     <ClInclude Include="DesktopRect.h" />
     <ClInclude Include="DXGICapture.h" />
     <ClInclude Include="GDICapture.h" />
-    <ClInclude Include="gpukits.h" />
     <ClInclude Include="ImageUtils.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="MagCapture.h" />
@@ -237,7 +236,6 @@
     <ClCompile Include="d3d11render.cpp" />
     <ClCompile Include="DXGICapture.cpp" />
     <ClCompile Include="GDICapture.cpp" />
-    <ClCompile Include="gpukits.cpp" />
     <ClCompile Include="ImageUtils.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="MagCapture.cpp" />

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
 #include "d3d11render.h"
-#include "gpukits.h"
+#include "cpgpu.h"
 
 #include <chrono>
 #include <directxmath.h>
@@ -176,7 +176,7 @@ HRESULT d3d11render::_setupShader(VideoFrameType fmt)
         case VideoFrameType::kVideoFrameTypeRGBA:
         case VideoFrameType::kVideoFrameTypeBGRA:
         {
-            hr = gpukits::CompileVertexShader(L"hlsl/vsRGBA.hlsl", "main", _dev.Get(), &vsBlob, nullptr);
+            hr = CPGPU::CompileVertexShader(L"hlsl/vsRGBA.hlsl", "main", _dev.Get(), &vsBlob, nullptr);
             HR_CHECK(hr);
 
             ComPtr<ID3D11VertexShader> vs;
@@ -186,7 +186,7 @@ HRESULT d3d11render::_setupShader(VideoFrameType fmt)
             _vs = vs;
 
             ComPtr<ID3DBlob> psBlob = nullptr;
-            hr = gpukits::CompilePixelShader(L"hlsl/psRGBA.hlsl", "main", _dev.Get(), &psBlob, nullptr);
+            hr = CPGPU::CompilePixelShader(L"hlsl/psRGBA.hlsl", "main", _dev.Get(), &psBlob, nullptr);
             HR_CHECK(hr);
 
             ComPtr<ID3D11PixelShader> ps;
@@ -335,27 +335,27 @@ HRESULT d3d11render::_reallocTexture(CSize destBufSize, int dformat)
     case VideoFrameType::kVideoFrameTypeI420:
     {
         if (SUCCEEDED(hRet)) {
-            hRet = gpukits::MakeTexAndSRV(_dev.Get(), width, height, DXGI_FORMAT_R8_UNORM, &_yText, &_ySRV,
+            hRet = CPGPU::MakeTexAndSRV(_dev.Get(), width, height, DXGI_FORMAT_R8_UNORM, &_yText, &_ySRV,
                                           D3D11_USAGE_DYNAMIC, D3D11_BIND_SHADER_RESOURCE, D3D11_CPU_ACCESS_WRITE);
         }
 
         if (SUCCEEDED(hRet)) {
-            hRet = gpukits::MakeTexAndSRV(_dev.Get(), width / 2, height / 2, DXGI_FORMAT_R8_UNORM, &_uText, &_uSRV,
+            hRet = CPGPU::MakeTexAndSRV(_dev.Get(), width / 2, height / 2, DXGI_FORMAT_R8_UNORM, &_uText, &_uSRV,
                                           D3D11_USAGE_DYNAMIC, D3D11_BIND_SHADER_RESOURCE, D3D11_CPU_ACCESS_WRITE);
         }
 
         if (SUCCEEDED(hRet)) {
-            hRet = gpukits::MakeTexAndSRV(_dev.Get(), width / 2, height / 2, DXGI_FORMAT_R8_UNORM, &_vText, &_vSRV,
+            hRet = CPGPU::MakeTexAndSRV(_dev.Get(), width / 2, height / 2, DXGI_FORMAT_R8_UNORM, &_vText, &_vSRV,
                                           D3D11_USAGE_DYNAMIC, D3D11_BIND_SHADER_RESOURCE, D3D11_CPU_ACCESS_WRITE);
         }
     } break;
     case VideoFrameType::kVideoFrameTypeNV12:
     {
-        hRet = gpukits::MakeTexAndSRV(_dev.Get(), width, height, DXGI_FORMAT_R8_UNORM, &_yText, &_ySRV,
+        hRet = CPGPU::MakeTexAndSRV(_dev.Get(), width, height, DXGI_FORMAT_R8_UNORM, &_yText, &_ySRV,
                                       D3D11_USAGE_DYNAMIC, D3D11_BIND_SHADER_RESOURCE, D3D11_CPU_ACCESS_WRITE);
 
         if (SUCCEEDED(hRet)) {
-            hRet = gpukits::MakeTexAndSRV(_dev.Get(), width, height, DXGI_FORMAT_R8_UNORM, &_uText, &_uSRV,
+            hRet = CPGPU::MakeTexAndSRV(_dev.Get(), width, height, DXGI_FORMAT_R8_UNORM, &_uText, &_uSRV,
                                           D3D11_USAGE_DYNAMIC, D3D11_BIND_SHADER_RESOURCE, D3D11_CPU_ACCESS_WRITE);
         }
     } break;
@@ -363,7 +363,7 @@ HRESULT d3d11render::_reallocTexture(CSize destBufSize, int dformat)
     case VideoFrameType::kVideoFrameTypeBGRA:
     case VideoFrameType::kVideoFrameTypeRGB24:
     {
-        hRet = gpukits::MakeTexAndSRV(_dev.Get(), width, height, DXGI_FORMAT_R8G8B8A8_UNORM, &_yText, &_ySRV,
+        hRet = CPGPU::MakeTexAndSRV(_dev.Get(), width, height, DXGI_FORMAT_R8G8B8A8_UNORM, &_yText, &_ySRV,
                                       D3D11_USAGE_DYNAMIC, D3D11_BIND_SHADER_RESOURCE, D3D11_CPU_ACCESS_WRITE);
     } break;
     default:

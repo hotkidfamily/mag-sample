@@ -6,6 +6,23 @@
 
 
 namespace CPGPU {
+HRESULT CompileVertexShader(LPCWSTR srcFile,
+                              LPCSTR entryPoint,
+                              ID3D11Device *device,
+                              ID3DBlob **blob,
+                              const D3D_SHADER_MACRO defines[] = nullptr);
+
+HRESULT CompilePixelShader(LPCWSTR srcFile,
+                           LPCSTR entryPoint,
+                           ID3D11Device *device,
+                           ID3DBlob **blob,
+                           const D3D_SHADER_MACRO defines[] = nullptr);
+
+HRESULT CompileComputeShader(LPCWSTR srcFile,
+                             LPCSTR entryPoint,
+                             ID3D11Device *device,
+                             ID3DBlob **blob,
+                             const D3D_SHADER_MACRO defines[] = nullptr);
 auto CreateD3D11Device(D3D_DRIVER_TYPE const type, UINT flags, Microsoft::WRL::ComPtr<ID3D11Device> &device);
 auto CreateD3D11Device(UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT);
 auto CreateDXGISwapChain(Microsoft::WRL::ComPtr<ID3D11Device> const device,
