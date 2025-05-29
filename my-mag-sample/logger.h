@@ -12,6 +12,9 @@ class logger {
         Assert = 5,
         Release = 6
     };
+    static void logInfoW(const wchar_t *fmt, ...);
+    static void logErrorW(const wchar_t *fmt, ...);
+    static void logWarningW(const wchar_t *fmt, ...);
 
     static void logInfo(const char *fmt, ...);
     static void logError(const char *fmt, ...);
