@@ -28,7 +28,7 @@ private:
     std::wstring m_className;
 };
 
-std::wstring GetClassName(HWND hwnd)
+inline std::wstring GetClassName(HWND hwnd)
 {
 	std::array<WCHAR, 1024> className;
 
@@ -38,7 +38,7 @@ std::wstring GetClassName(HWND hwnd)
     return title;
 }
 
-std::wstring GetWindowText(HWND hwnd)
+inline std::wstring GetWindowText(HWND hwnd)
 {
 	std::array<WCHAR, 1024> windowText;
 
@@ -48,14 +48,21 @@ std::wstring GetWindowText(HWND hwnd)
     return title;
 }
 
-bool IsWindowExcludeFromCapture(HWND hwnd)
+inline bool IsWindowExcludeFromCapture(HWND hwnd)
 {
     DWORD affinity = 0;
     auto ret = GetWindowDisplayAffinity(hwnd, &affinity);
     return (ret == TRUE) && (affinity == WDA_EXCLUDEFROMCAPTURE);
 }
 
-bool IsWindowCloaked(Window wnd) 
+inline bool IsWindowDisabled(HWND hwnd)
+{
+    auto style = GetWindowLong(hwnd, GWL_STYLE);
+    return (style & WS_DISABLED) == WS_DISABLED;
+}
+
+
+inline bool IsWindowCloaked(Window wnd)
 {
     bool ret = FALSE;
 
@@ -68,14 +75,14 @@ bool IsWindowCloaked(Window wnd)
     return ret;
 }
 
-bool IsInvalidWindowSize(Window wnd)
+inline bool IsInvalidWindowSize(Window wnd)
 {
     RECT rect;
     GetWindowRect(wnd.Hwnd(), &rect);
     return !!IsRectEmpty(&rect);
 }
 
-bool IsWindowCapable(Window wnd)
+static bool IsWindowCapable(Window wnd)
 {
     HWND hwnd = wnd.Hwnd();
     if (hwnd == GetShellWindow()) {
@@ -103,6 +110,10 @@ bool IsWindowCapable(Window wnd)
     }
 
     if (GetAncestor(hwnd, GA_ROOT) != hwnd){
+        return false;
+    }
+
+    if (IsWindowDisabled(hwnd)) {
         return false;
     }
 
