@@ -6,6 +6,8 @@
 #include "CapUtility.h"
 #include "CPGPU.h"
 
+#include "logger.h"
+
 #pragma comment(lib, "windowsapp.lib")
 
 using namespace winrt::Windows::Graphics::Capture;
@@ -44,7 +46,8 @@ bool WGCCapture::_createSession()
                 winrt::put_abi(cptItem)));
         }
     }
-    catch (winrt::hresult_error) {
+    catch (winrt::hresult_error e) {
+        logger::logErrorW(L"WGC: %s [%x][%x]", e.message().c_str(), _hwnd, _hmonitor);
         return false;
     }
 
