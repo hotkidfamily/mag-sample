@@ -9,14 +9,14 @@ class GDICapture : public CCapture {
     ~GDICapture();
 
   public:
-    virtual bool startCaptureWindow(HWND hWnd) final;
-    virtual bool startCaptureScreen(HMONITOR hMonitor) final;
-    virtual bool stop() final;
-    virtual bool captureImage(const DesktopRect &rect) final;
-    virtual bool setCallback(funcCaptureCallback, void *) final;
-    virtual bool setExcludeWindows(std::vector<HWND>& hWnd) final;
-    virtual const char *getName() final;
-    virtual bool usingTimer() final;
+    bool startCaptureWindow(HWND hWnd) final;
+    bool startCaptureScreen(HMONITOR hMonitor) final;
+    bool stop() final;
+    bool captureImage(const DesktopRect &rect) final;
+    bool setCallback(funcCaptureCallback, void *) final;
+    bool setExcludeWindows(std::vector<HWND>& hWnd) final;
+    const char *getName() final;
+    bool usingTimer() final;
 
   public:
     bool onCaptured(void *srcdata, BITMAPINFOHEADER& srcheader);

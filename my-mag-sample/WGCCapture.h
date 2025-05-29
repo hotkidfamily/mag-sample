@@ -8,7 +8,6 @@
 #include <winrt/windows.graphics.directx.h>
 #include <winrt/windows.graphics.directx.direct3d11.h>
 #include <windows.graphics.directx.direct3d11.interop.h>
-#include <winrt/windows.system.h>
 #include <DispatcherQueue.h>
 #include <d3d11.h>
 
@@ -24,15 +23,15 @@ class WGCCapture : public CCapture {
     ~WGCCapture();
 
   public:
-    virtual bool startCaptureWindow(HWND hWnd) final;
-    virtual bool startCaptureScreen(HMONITOR hMonitor) final;
-    virtual bool stop() final;
-    virtual bool captureImage(const DesktopRect &rect) final;
-    virtual bool setCallback(funcCaptureCallback, void *) final;
-    virtual bool setExcludeWindows(std::vector<HWND>& hWnd) final;
+    bool startCaptureWindow(HWND hWnd) final;
+    bool startCaptureScreen(HMONITOR hMonitor) final;
+    bool stop() final;
+    bool captureImage(const DesktopRect &rect) final;
+    bool setCallback(funcCaptureCallback, void *) final;
+    bool setExcludeWindows(std::vector<HWND>& hWnd) final;
     
-    virtual const char *getName() final { return "Windows.Graphics.Capture";}
-    virtual bool usingTimer() final { return false; }
+    const char *getName() final { return "Windows.Graphics.Capture";}
+    bool usingTimer() final { return false; }
 
 
   private:

@@ -43,7 +43,7 @@
 namespace Platform
 {
 
-const OSVERSIONINFOEX &GetWindowsVersion()
+static const OSVERSIONINFOEX &GetWindowsVersion()
 {
     struct OSVERINFO
     {
@@ -112,13 +112,13 @@ const OSVERSIONINFOEX &GetWindowsVersion()
     return osvi;
 }
 
-bool IsWindowsVersionOrGreater(WORD wMajorVersion, WORD wMinorVersion, WORD wServicePackMajor)
+inline bool IsWindowsVersionOrGreater(WORD wMajorVersion, WORD wMinorVersion, WORD wServicePackMajor)
 {
     OSVERSIONINFOEX osvi = GetWindowsVersion();
-    if ( (osvi.dwMajorVersion >= wMajorVersion) 
-        || (osvi.dwMajorVersion == wMajorVersion && osvi.dwMinorVersion >= wMinorVersion) 
-        || (osvi.dwMajorVersion == wMajorVersion
-            && osvi.dwMinorVersion == wMinorVersion && osvi.wServicePackMajor >= wServicePackMajor)) {
+    if ((osvi.dwMajorVersion >= wMajorVersion)
+        || (osvi.dwMajorVersion == wMajorVersion && osvi.dwMinorVersion >= wMinorVersion)
+        || (osvi.dwMajorVersion == wMajorVersion && osvi.dwMinorVersion == wMinorVersion
+            && osvi.wServicePackMajor >= wServicePackMajor)) {
         return true;
     }
     else {
@@ -126,13 +126,13 @@ bool IsWindowsVersionOrGreater(WORD wMajorVersion, WORD wMinorVersion, WORD wSer
     }
 }
 
-bool IsWindowsBuildNumberOrGreater(DWORD dwBuildNumber)
+inline bool IsWindowsBuildNumberOrGreater(DWORD dwBuildNumber)
 {
     OSVERSIONINFOEX osvi = GetWindowsVersion();
     return osvi.dwBuildNumber >= dwBuildNumber;
 }
 
-bool IsWindows2kOrLess()
+inline bool IsWindows2kOrLess()
 {
     OSVERSIONINFOEX osvi = GetWindowsVersion();
     if (osvi.dwMajorVersion <= HIBYTE(WIN32_WINNT_WIN2K)) {
@@ -143,146 +143,146 @@ bool IsWindows2kOrLess()
     }
 }
 
-bool IsWindowsXPOrGreater()
+inline bool IsWindowsXPOrGreater()
 {
     return IsWindowsVersionOrGreater(HIBYTE(WIN32_WINNT_WINXP), LOBYTE(WIN32_WINNT_WINXP), 0);
 }
 
-bool IsWindowsXPSP1OrGreater()
+inline bool IsWindowsXPSP1OrGreater()
 {
     return IsWindowsVersionOrGreater(HIBYTE(WIN32_WINNT_WINXP), LOBYTE(WIN32_WINNT_WINXP), 1);
 }
 
-bool IsWindowsXPSP2OrGreater()
+inline bool IsWindowsXPSP2OrGreater()
 {
     return IsWindowsVersionOrGreater(HIBYTE(WIN32_WINNT_WINXP), LOBYTE(WIN32_WINNT_WINXP), 2);
 }
 
-bool IsWindowsXPSP3OrGreater()
+inline bool IsWindowsXPSP3OrGreater()
 {
     return IsWindowsVersionOrGreater(HIBYTE(WIN32_WINNT_WINXP), LOBYTE(WIN32_WINNT_WINXP), 3);
 }
 
-bool IsWindowsVistaOrGreater()
+inline bool IsWindowsVistaOrGreater()
 {
     return IsWindowsVersionOrGreater(HIBYTE(WIN32_WINNT_VISTA), LOBYTE(WIN32_WINNT_VISTA), 0);
 }
 
-bool IsWindowsVistaSP1OrGreater()
+inline bool IsWindowsVistaSP1OrGreater()
 {
     return IsWindowsVersionOrGreater(HIBYTE(WIN32_WINNT_VISTA), LOBYTE(WIN32_WINNT_VISTA), 1);
 }
 
-bool IsWindowsVistaSP2OrGreater()
+inline bool IsWindowsVistaSP2OrGreater()
 {
     return IsWindowsVersionOrGreater(HIBYTE(WIN32_WINNT_VISTA), LOBYTE(WIN32_WINNT_VISTA), 2);
 }
 
-bool IsWindows7OrGreater()
+inline bool IsWindows7OrGreater()
 {
     return IsWindowsVersionOrGreater(HIBYTE(WIN32_WINNT_WIN7), LOBYTE(WIN32_WINNT_WIN7), 0);
 }
 
-bool IsWindows7SP1OrGreater()
+inline bool IsWindows7SP1OrGreater()
 {
     return IsWindowsVersionOrGreater(HIBYTE(WIN32_WINNT_WIN7), LOBYTE(WIN32_WINNT_WIN7), 1);
 }
 
-bool IsWindows8OrGreater()
+inline bool IsWindows8OrGreater()
 {
     return IsWindowsVersionOrGreater(HIBYTE(WIN32_WINNT_WIN8), LOBYTE(WIN32_WINNT_WIN8), 0);
 }
 
-bool IsWindows8Point1OrGreater()
+inline bool IsWindows8Point1OrGreater()
 {
     return IsWindowsVersionOrGreater(HIBYTE(WIN32_WINNT_WINBLUE), LOBYTE(WIN32_WINNT_WINBLUE), 0);
 }
 
-bool IsWindows10OrGreater()
+inline bool IsWindows10OrGreater()
 {
     return IsWindowsVersionOrGreater(HIBYTE(WIN32_WINNT_WIN10), LOBYTE(WIN32_WINNT_WIN10), 0);
 }
 
-bool IsWin10_1507OrGreater() // Threshold	！
+inline bool IsWin10_1507OrGreater() // Threshold	！
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(Win10_1507));
 }
-bool IsWin10_1511OrGreater() // Threshold 2	November Update
+inline bool IsWin10_1511OrGreater() // Threshold 2	November Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(Win10_1511));
 }
-bool IsWin10_1607OrGreater() // Redstone Anniversary Update
+inline bool IsWin10_1607OrGreater() // Redstone Anniversary Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(Win10_1607));
 }
-bool IsWin10_1703OrGreater() // Redstone 2 Creators Update
+inline bool IsWin10_1703OrGreater() // Redstone 2 Creators Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(Win10_1703));
 }
-bool IsWin10_1709OrGreater() // Redstone 3 Fall Creators Update
+inline bool IsWin10_1709OrGreater() // Redstone 3 Fall Creators Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(Win10_1709));
 }
-bool IsWin10_1803OrGreater() // Redstone 4 April 2018 Update
+inline bool IsWin10_1803OrGreater() // Redstone 4 April 2018 Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(Win10_1803));
 }
-bool IsWin10_1809OrGreater() // Redstone 5 October 2018 Update
+inline bool IsWin10_1809OrGreater() // Redstone 5 October 2018 Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(Win10_1809));
 }
-bool IsWin10_1903OrGreater() // 19H1 May 2019 Update
+inline bool IsWin10_1903OrGreater() // 19H1 May 2019 Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(Win10_1903));
 }
-bool IsWin10_1909OrGreater() // 19H2 November 2019 Update
+inline bool IsWin10_1909OrGreater() // 19H2 November 2019 Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(Win10_1909));
 }
-bool IsWin10_2004OrGreater() // 20H1 May 2020 Update
+inline bool IsWin10_2004OrGreater() // 20H1 May 2020 Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(Win10_2004));
 }
-bool IsWin10_20H2OrGreater() // 20H2 October 2020 Update
+inline bool IsWin10_20H2OrGreater() // 20H2 October 2020 Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(Win10_20H2));
 }
-bool IsWin10_21H1OrGreater() // 21H1 May 2021 Update
+inline bool IsWin10_21H1OrGreater() // 21H1 May 2021 Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(Win10_21H1));
 }
-bool IsWin10_21H2OrGreater() // 21H2 November 2021 Update
+inline bool IsWin10_21H2OrGreater() // 21H2 November 2021 Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(Win10_21H2));
 }
-bool IsWin10_22H2OrGreater() // 22H2 2022 Update
+inline bool IsWin10_22H2OrGreater() // 22H2 2022 Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(Win10_22H2));
 }
 
-bool IsWin11_21H2OrGreater() //	Sun Valley	！
+inline bool IsWin11_21H2OrGreater() //	Sun Valley	！
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(WIN11_21H2));
 }
-bool IsWin11_22H2OrGreater() //	Sun Valley 2	2022 Update
+inline bool IsWin11_22H2OrGreater() //	Sun Valley 2	2022 Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(WIN11_22H2));
 }
-bool IsWin11_23H2OrGreater() //	Sun Valley 3	2023 Update
+inline bool IsWin11_23H2OrGreater() //	Sun Valley 3	2023 Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(WIN11_23H2));
 }
-bool IsWin11_24H2OrGreater() //	Hudson Valley	2024 Update
+inline bool IsWin11_24H2OrGreater() //	Hudson Valley	2024 Update
 {
     return (IsWindows10OrGreater() && IsWindowsBuildNumberOrGreater(WIN11_24H2));
 }
 
-bool IsWindows11OrGreater()
+inline bool IsWindows11OrGreater()
 {
     return IsWin11_21H2OrGreater();
 }
 
-bool IsWindowsServer()
+inline bool IsWindowsServer()
 {
     OSVERSIONINFOEXW osvi = { sizeof(osvi), 0, 0, 0, 0, { 0 }, 0, 0, 0, VER_NT_WORKSTATION };
     DWORDLONG const dwlConditionMask = VerSetConditionMask(0, VER_PRODUCT_TYPE, VER_EQUAL);

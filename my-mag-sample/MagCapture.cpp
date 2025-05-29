@@ -7,6 +7,7 @@
 
 #include "CapUtility.h"
 #include "logger.h"
+#include "WinVersionHelper.h"
 
 
 static wchar_t kMagnifierHostClass[] = L"HT-CapHostClass";
@@ -23,7 +24,7 @@ DWORD GetTlsIndex()
 
 MagCapture::MagCapture()
 {
-    loadMagnificationAPI();
+    _loadMagnificationAPI();
 }
 
 
@@ -37,7 +38,7 @@ MagCapture::~MagCapture()
         FreeLibrary(_hMagModule);
 }
 
-bool MagCapture::loadMagnificationAPI()
+bool MagCapture::_loadMagnificationAPI()
 {
     bool ret = false;
 
@@ -78,7 +79,7 @@ bool MagCapture::loadMagnificationAPI()
 }
 
 
-bool MagCapture::initMagnifier(DesktopRect &rect)
+bool MagCapture::_initMagnifier(DesktopRect &rect)
 {
     BOOL result = TRUE;
     HMODULE hInstance = nullptr;
@@ -89,7 +90,7 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
         /*
          * It will not work when DWM disabled.
          */
-        if (IsWindows7OrGreater()) {
+        if (Platform::IsWindows7OrGreater()) {
             DwmIsCompositionEnabled(&result);
         }
         if (!result) {
@@ -149,7 +150,7 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
         ShowWindow(_hostWnd, SW_HIDE);
 
         // Set the scaling callback to receive captured image.
-        result = _api->SetImageScalingCallback(_magWnd, &MagCapture::OnMagImageScalingCallback);
+        result = _api->SetImageScalingCallback(_magWnd, &MagCapture::_OnMagImageScalingCallback);
         if (!result) {
             info = "Set Image Scaling Callback.";
             break;
@@ -159,7 +160,7 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
     
     if (!result) {
         logger::logError("init magnifier failed %s", info);
-        destoryMagnifier();
+        _destoryMagnifier();
     }
     else {
         _hMagInstance = hInstance;
@@ -168,7 +169,7 @@ bool MagCapture::initMagnifier(DesktopRect &rect)
     return result;
 }
 
-bool MagCapture::destoryMagnifier()
+bool MagCapture::_destoryMagnifier()
 {
     bool ret = false;
 
@@ -241,7 +242,7 @@ bool MagCapture::onCaptured(void *srcdata, MAGIMAGEHEADER header)
     return true;
 }
 
-BOOL WINAPI MagCapture::OnMagImageScalingCallback(HWND hwnd,
+BOOL WINAPI MagCapture::_OnMagImageScalingCallback(HWND hwnd,
     void* srcdata,
     MAGIMAGEHEADER srcheader,
     void* destdata,
@@ -317,7 +318,7 @@ bool MagCapture::startCaptureWindow(HWND hWnd)
     RECT primeryRect;
     CapUtility::GetPrimeryWindowsRect(primeryRect);
 
-    ret = initMagnifier(rect);
+    ret = _initMagnifier(rect);
 
     return ret;
 }
@@ -332,7 +333,7 @@ bool MagCapture::startCaptureScreen(HMONITOR hMonitor)
     RECT primeryRect;
     CapUtility::GetPrimeryWindowsRect(primeryRect);
 
-    ret = initMagnifier(rect);
+    ret = _initMagnifier(rect);
 
     return ret;
 }
@@ -341,14 +342,14 @@ bool MagCapture::stop()
 {
     bool ret = false;
 
-    destoryMagnifier();
+    _destoryMagnifier();
 
     return ret;
 }
 
 const char *MagCapture::getName()
 {
-    return "GDI capture";
+    return "MAG capture";
 }
 
 bool MagCapture::usingTimer()
