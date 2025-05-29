@@ -368,7 +368,7 @@ void CmymagsampleDlg::CaptureThread()
             cpt.statics->minMax(min, max);
             uint64_t rmin = 0, rmax = 0;
             rd.statics->minMax(rmin, rmax);
-            logger::logInfo("cpt: %0.2f/%lld/%lld  render: %0.2f/%lld/%lld\n", cpt.statics->fps(), min, max,
+            logger::logInfo("cpt: %0.2f/%lld/%lld  render: %0.2f/%lld/%lld", cpt.statics->fps(), min, max,
                             rd.statics->fps(), rmin, rmax);
         }
     }

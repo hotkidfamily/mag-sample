@@ -2,10 +2,13 @@
 #include "logger.h"
 #include <iostream>
 
-static LogLevel g_logLevel = LogLevel::Info;
+static logger::LogLevel g_logLevel = logger::LogLevel::Info;
 const int kMaxLogSize = 2048;
+static const char *logPrefix[] = {
+    "Trace", "Debug", "Info", "Warn", "Error", "Assert", "Release",
+};
 
-static void _log(LogLevel level, const char *fmt, va_list vl)
+static void _log(logger::LogLevel level, const char *fmt, va_list vl)
 {
     if (g_logLevel > level)
         return;
@@ -13,7 +16,7 @@ static void _log(LogLevel level, const char *fmt, va_list vl)
     char msg[kMaxLogSize] = { 0 };
     _vsnprintf_s(msg, kMaxLogSize, fmt, vl);
 
-    std::cout << msg;
+    std::cout << logPrefix[level] << " - " << msg << std::endl;
 }
 
 void logger::log(LogLevel level, const char *fmt, ...)
@@ -27,7 +30,7 @@ void logger::log(LogLevel level, const char *fmt, ...)
     _vsnprintf_s(msg, kMaxLogSize, fmt, vl);
     va_end(vl);
 
-    std::cout << msg << std::endl;
+    std::cout << logPrefix[level] << " - " << msg << std::endl;
 }
 
 void logger::logInfo(const char *fmt, ...)
