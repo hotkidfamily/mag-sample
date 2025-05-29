@@ -280,6 +280,7 @@ LRESULT CmymagsampleDlg::OnUserDefinedMessage(WPARAM wParam, LPARAM lParam)
 void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
 {
     auto &cpt = _appContext->cpt;
+    auto &rd = _appContext->render;
     cpt.statics->append();
     if (TIMER_WINDOW_CAPTURE == nIDEvent) {
         RECT wRect;
@@ -311,6 +312,19 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
         cpt.host->setExcludeWindows(es);
         if (cpt.host.get())
             cpt.host->captureImage(rect);
+    }
+
+    auto now = std::chrono::high_resolution_clock::now();
+    static auto start = now;
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
+    if (duration.count() >= 1000) {
+        start = now;
+        uint64_t min = 0, max = 0;
+        cpt.statics->minMax(min, max);
+        uint64_t rmin = 0, rmax = 0;
+        rd.statics->minMax(rmin, rmax);
+        logger::logInfo("cpt: [%s] %0.2f/%lld/%lld  render: %0.2f/%lld/%lld", cpt.host->getName(), cpt.statics->fps(),
+                        min, max, rd.statics->fps(), rmin, rmax);
     }
 }
 
@@ -345,7 +359,6 @@ void CmymagsampleDlg::CaptureThread()
 
     std::chrono::steady_clock::time_point start = std::chrono::high_resolution_clock::now();
     auto frame_interval = 1000LL / timer.fps;
-    auto logStart = start;
 
     while (timer.bRunning) {
         OnTimer(timer.timerID);
@@ -359,18 +372,6 @@ void CmymagsampleDlg::CaptureThread()
         auto next = frame_interval - interval.count();
         std::this_thread::sleep_for(std::chrono::milliseconds(next));
         start = end;
-
-        auto log_interval = std::chrono::duration_cast<std::chrono::milliseconds>(end - logStart);
-        if (log_interval.count() >= 1000) 
-        {
-            logStart = end;
-            uint64_t min = 0, max = 0;
-            cpt.statics->minMax(min, max);
-            uint64_t rmin = 0, rmax = 0;
-            rd.statics->minMax(rmin, rmax);
-            logger::logInfo("cpt: %0.2f/%lld/%lld  render: %0.2f/%lld/%lld", cpt.statics->fps(), min, max,
-                            rd.statics->fps(), rmin, rmax);
-        }
     }
 }
 
