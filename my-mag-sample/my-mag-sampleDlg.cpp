@@ -566,18 +566,18 @@ void CmymagsampleDlg::OnCbnSelchangeComboWndlist()
         CapUtility::GetWindowRect(hWnd, tWithoutBorder);
 
         WCHAR strInfo[MAX_PATH];
+        // clang-format off 
         swprintf_s(strInfo, MAX_PATH,
                    L"Info: GetWindowRect = %d,%d,%d,%d(%dx%d), "
                    L"WinInfo: (%dx%d)%d,%d,%d,%d\n"
                    L"DwmGetWindowAttribute = %d,%d,%d,%d(%dx%d), "
                    L"my = %d,%d,%d,%d(%dx%d)",
-                   tOrigRect.left, tOrigRect.top, tOrigRect.right, tOrigRect.bottom, tOrigRect.Width(),
-                   tOrigRect.Height(), info.cxWindowBorders, info.cyWindowBorders, info.rcWindow.left,
-                   info.rcWindow.top, info.rcWindow.right, info.rcWindow.bottom, tDwmRect.left, tDwmRect.top,
-                   tDwmRect.right, tDwmRect.bottom, tDwmRect.Width(), tDwmRect.Height(), tWithoutBorder.left,
-                   tWithoutBorder.top, tWithoutBorder.right, tWithoutBorder.bottom, tWithoutBorder.Width(),
-                   tWithoutBorder.Height()   
+                   tOrigRect.left, tOrigRect.top, tOrigRect.right, tOrigRect.bottom, tOrigRect.Width(),tOrigRect.Height(), 
+            info.cxWindowBorders, info.cyWindowBorders,info.rcWindow.left,info.rcWindow.top, info.rcWindow.right, info.rcWindow.bottom, 
+            tDwmRect.left, tDwmRect.top,tDwmRect.right, tDwmRect.bottom, tDwmRect.Width(), tDwmRect.Height(), 
+            tWithoutBorder.left, tWithoutBorder.top, tWithoutBorder.right, tWithoutBorder.bottom, tWithoutBorder.Width(),tWithoutBorder.Height()
         );
+        // clang-format on
 
         _winRectInfoText.SetWindowTextW(strInfo);
     }

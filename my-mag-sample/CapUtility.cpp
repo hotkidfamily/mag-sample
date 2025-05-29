@@ -3,7 +3,7 @@
 
 #include <shellscalingapi.h>
 #include <set>
-#include <versionhelpers.h>
+#include "WinVersionHelper.h"
 
 namespace CapUtility
 {
@@ -381,10 +381,10 @@ done:
 BOOL GetWindowRect(HWND hWnd, RECT &iRect)
 {
     BOOL bRet = FALSE;
-    if (IsWindows8OrGreater()) {
+    if (Platform::IsWindows8OrGreater()) {
         bRet = S_OK == DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &iRect, sizeof(RECT));
     }
-    else if (IsWindows7OrGreater()){
+    else if (Platform::IsWindows7OrGreater()){
         WINDOWINFO info;
         info.cbSize = sizeof(WINDOWINFO);
         CRect rect;
