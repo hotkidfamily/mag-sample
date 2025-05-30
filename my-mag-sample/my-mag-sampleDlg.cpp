@@ -10,6 +10,7 @@
 #include <sstream>
 #include <functional>
 #include <iostream>
+#include <iomanip>
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -340,7 +341,8 @@ void CmymagsampleDlg::OnBnClickedButtonFindwind()
 
     for (auto &wnd : _wndList) {
         std::wstringstream ss;
-        ss << wnd.Hwnd() << "|" << wnd.Title() << wnd.ClassName();
+        ss << std::hex << std::setw(8) << std::setfill(L'0') << (uint32_t)wnd.Hwnd() << L" | " << wnd.ClassName()
+           << L" | " << wnd.Title();
 
         int index = _wndListCombobox.AddString(ss.str().c_str());
         if (wnd.Hwnd() == cpt.winID) {
