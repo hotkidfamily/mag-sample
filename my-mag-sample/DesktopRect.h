@@ -119,7 +119,7 @@ public:
 
     bool is_empty() const { return left_ >= right_ || top_ >= bottom_; }
 
-    bool equals(const DesktopRect& other) const {
+    bool operator==(const DesktopRect& other) const {
         return left_ == other.left_ && top_ == other.top_ &&
             right_ == other.right_ && bottom_ == other.bottom_;
     }
