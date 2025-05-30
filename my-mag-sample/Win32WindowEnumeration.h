@@ -11,21 +11,23 @@ struct Window
 {
 public:
     Window(nullptr_t) {}
-    Window(HWND hwnd, std::wstring const& title, std::wstring& className)
+    Window(HWND hwnd, std::wstring const &title, std::wstring &className, bool transparent = false)
     {
-        m_hwnd = hwnd;
-        m_title = title;
-        m_className = className;
+        _hwnd = hwnd;
+        _title = title;
+        _className = className;
+        _transparent = transparent;
     }
 
-    HWND Hwnd() const noexcept { return m_hwnd; }
-    std::wstring Title() const noexcept { return m_title; }
-    std::wstring ClassName() const noexcept { return m_className; }
+    HWND Hwnd() const noexcept { return _hwnd; }
+    std::wstring Title() const noexcept { return _title; }
+    std::wstring ClassName() const noexcept { return _className; }
 
 private:
-    HWND m_hwnd;
-    std::wstring m_title;
-    std::wstring m_className;
+    HWND _hwnd;
+    std::wstring _title;
+    std::wstring _className;
+    bool _transparent;
 };
 
 inline std::wstring GetClassName(HWND hwnd)
@@ -76,10 +78,14 @@ inline bool IsExLayderedWindow(HWND hwnd)
 inline bool IsToolWindow(HWND hwnd)
 {
     auto style = GetWindowLong(hwnd, GWL_EXSTYLE);
-    return (  ((style & WS_EX_TOOLWINDOW) == WS_EX_TOOLWINDOW) 
-             || ((style & WS_EX_NOACTIVATE) == WS_EX_NOACTIVATE) );
+    return (style & WS_EX_TOOLWINDOW) == WS_EX_TOOLWINDOW;
 }
 
+inline bool IsNoActivateWindow(HWND hwnd)
+{
+    auto style = GetWindowLong(hwnd, GWL_EXSTYLE);
+    return (style & WS_EX_NOACTIVATE) == WS_EX_NOACTIVATE;
+}
 
 inline bool IsWindowCloaked(Window wnd)
 {
@@ -144,13 +150,9 @@ static bool IsWindowCapable(Window wnd)
         return false;
     }
 
-    if (IsExLayderedWindow(hwnd) && IsTransparentWindow(hwnd)) {
-        return false;
-    }
-
-    if (IsToolWindow(hwnd)) {
-        return false;
-    }
+    //if (IsToolWindow(hwnd)) {
+    //    return false;
+    //}
 
     return true;
 }
@@ -159,13 +161,13 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
     auto class_name = GetClassName(hwnd);
     auto title = GetWindowText(hwnd);
-    auto window = Window(hwnd, title, class_name);
-
+    auto transparent = IsTransparentWindow(hwnd);
+    auto window = Window(hwnd, title, class_name, transparent);
+    
     if (!IsWindowCapable(window))
     {
         return TRUE;
     }
-   
 
     std::vector<Window>& windows = *reinterpret_cast<std::vector<Window>*>(lParam);
     windows.push_back(window);
