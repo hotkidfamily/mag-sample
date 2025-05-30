@@ -60,18 +60,25 @@ bool WGCCapture::_createSession()
     auto revoker = framePool.FrameArrived(winrt::auto_revoke, { this, &WGCCapture::_onFrameArrived });
 
     if (Platform::IsWin10_2004OrGreater()) {
+        //if (Windows.Foundation.Metadata.ApiInformation.IsApiContractPresent(
+        // "Windows.Foundation.UniversalApiContract", 10)) // 2004
         if (winrt::Windows::Foundation::Metadata::ApiInformation::IsPropertyPresent(
                 L"Windows.Graphics.Capture.GraphicsCaptureSession", L"IsCursorCaptureEnabled")) {
             session.IsCursorCaptureEnabled(false);
         }
     }
 
+    if (Platform::IsWin10_21H1OrGreater())
+    // if (Windows.Foundation.Metadata.ApiInformation.IsApiContractPresent(
+    // "Windows.Foundation.UniversalApiContract", 12)) // 2104
     if (winrt::Windows::Foundation::Metadata::ApiInformation::IsPropertyPresent(
             L"Windows.Graphics.Capture.GraphicsCaptureSession", L"IsBorderRequired")){
         session.IsBorderRequired(false);
     }
 
     if (Platform::IsWin11_24H2OrGreater()) {
+        // if (Windows.Foundation.Metadata.ApiInformation.IsApiContractPresent(
+        // "Windows.Foundation.UniversalApiContract", 19)) // 2104
         if (winrt::Windows::Foundation::Metadata::ApiInformation::IsPropertyPresent(
                 L"Windows.Graphics.Capture.GraphicsCaptureSession", L"IncludeSecondaryWindows")) {
             //session.IncludeSecondaryWindows(true);
