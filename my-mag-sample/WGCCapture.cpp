@@ -7,6 +7,8 @@
 #include "CPGPU.h"
 
 #include "logger.h"
+#include "WinVersionHelper.h"
+#include <winrt/windows.foundation.metadata.h>
 
 #pragma comment(lib, "windowsapp.lib")
 
@@ -57,7 +59,29 @@ bool WGCCapture::_createSession()
     auto session = framePool.CreateCaptureSession(cptItem);
     auto revoker = framePool.FrameArrived(winrt::auto_revoke, { this, &WGCCapture::_onFrameArrived });
 
-    session.IsCursorCaptureEnabled(false); 
+    if (Platform::IsWin10_2004OrGreater()) {
+        if (winrt::Windows::Foundation::Metadata::ApiInformation::IsPropertyPresent(
+                L"Windows.Graphics.Capture.GraphicsCaptureSession", L"IsCursorCaptureEnabled")) {
+            session.IsCursorCaptureEnabled(false);
+        }
+    }
+
+    if (winrt::Windows::Foundation::Metadata::ApiInformation::IsPropertyPresent(
+            L"Windows.Graphics.Capture.GraphicsCaptureSession", L"IsBorderRequired")){
+        session.IsBorderRequired(false);
+    }
+
+    if (Platform::IsWin11_24H2OrGreater()) {
+        if (winrt::Windows::Foundation::Metadata::ApiInformation::IsPropertyPresent(
+                L"Windows.Graphics.Capture.GraphicsCaptureSession", L"IncludeSecondaryWindows")) {
+            //session.IncludeSecondaryWindows(true);
+        }
+        if (winrt::Windows::Foundation::Metadata::ApiInformation::IsPropertyPresent(
+                L"Windows.Graphics.Capture.GraphicsCaptureSession", L"MinUpdateInterval")) {
+            //session.MinUpdateInterval(std::chrono::milliseconds(30));
+        }
+    }
+        
     session.StartCapture();
 
     _session = session;
@@ -90,7 +114,12 @@ bool WGCCapture::startCaptureWindow(HWND hWnd)
     _hwnd = hWnd;
     _hmonitor = nullptr;
 
+    if (!winrt::Windows::Graphics::Capture::GraphicsCaptureSession::IsSupported()) {
+        return false;
+    }
+
     _action = ACTION::ACTION_Start;
+
     return true;
 }
 
@@ -98,6 +127,10 @@ bool WGCCapture::startCaptureScreen(HMONITOR hMonitor)
 {
     _hwnd = nullptr;
     _hmonitor = hMonitor;
+
+    if (!winrt::Windows::Graphics::Capture::GraphicsCaptureSession::IsSupported()) {
+        return false;
+    }
 
     _action = ACTION::ACTION_Start;
     return true;
