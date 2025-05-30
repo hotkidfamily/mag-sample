@@ -286,7 +286,7 @@ void CmymagsampleDlg::OnTimer(UINT_PTR nIDEvent)
     if (TIMER_WINDOW_CAPTURE == nIDEvent) {
         RECT wRect;
         HWND &hWnd = cpt.winID;
-        CapUtility::GetWindowRect(hWnd, wRect);
+        CapUtility::GetWindowRectAccuracy(hWnd, wRect);
 
         HMONITOR hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
         CapUtility::DisplaySetting settings = CapUtility::enumDisplaySettingByMonitor(hMonitor);
@@ -565,7 +565,7 @@ void CmymagsampleDlg::OnCbnSelchangeComboWndlist()
         }
 
         CRect tWithoutBorder;
-        CapUtility::GetWindowRect(hWnd, tWithoutBorder);
+        CapUtility::GetWindowRectAccuracy(hWnd, tWithoutBorder);
 
         WCHAR strInfo[MAX_PATH];
         // clang-format off 

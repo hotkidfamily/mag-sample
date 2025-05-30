@@ -378,38 +378,44 @@ done:
     return 0;
 }
 
-BOOL GetWindowRect(HWND hWnd, RECT &iRect)
+BOOL GetWindowRectAccuracy(HWND hWnd, RECT &iRect)
 {
     BOOL bRet = FALSE;
     if (Platform::IsWindows8OrGreater()) {
         bRet = S_OK == DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &iRect, sizeof(RECT));
     }
     else if (Platform::IsWindows7OrGreater()){
-        WINDOWINFO info;
-        info.cbSize = sizeof(WINDOWINFO);
-        CRect rect;
-        ::GetWindowRect(hWnd, rect);
-        ::GetWindowInfo(hWnd, &info);
+        BOOL dwmEnabled = FALSE;
+        if (SUCCEEDED(DwmIsCompositionEnabled(&dwmEnabled))) {
+            bRet = S_OK == DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &iRect, sizeof(RECT));
+        }
+        else {
+            WINDOWINFO info;
+            info.cbSize = sizeof(WINDOWINFO);
+            CRect rect;
+            ::GetWindowRect(hWnd, rect);
+            ::GetWindowInfo(hWnd, &info);
 
-        if (IsZoomed(hWnd)) {
-            rect.top += info.cyWindowBorders;
-            rect.left += info.cxWindowBorders;
-            rect.bottom -= info.cyWindowBorders;
-            rect.right -= info.cxWindowBorders;
+            if (IsZoomed(hWnd)) {
+                rect.top += info.cyWindowBorders;
+                rect.left += info.cxWindowBorders;
+                rect.bottom -= info.cyWindowBorders;
+                rect.right -= info.cxWindowBorders;
+            }
+            else if (!(info.dwStyle & WS_THICKFRAME)) {
+                rect.top += info.cyWindowBorders / 4;
+                rect.left += info.cxWindowBorders / 4;
+                rect.bottom -= info.cyWindowBorders / 4;
+                rect.right -= info.cxWindowBorders / 4;
+            }
+            else if (info.dwStyle & WS_OVERLAPPEDWINDOW) {
+                rect.left += info.cxWindowBorders;
+                rect.bottom -= info.cyWindowBorders;
+                rect.right -= info.cxWindowBorders;
+            }
+            iRect = rect;
+            bRet = TRUE;
         }
-        else if (!(info.dwStyle & WS_THICKFRAME)) {
-            rect.top += info.cyWindowBorders / 4;
-            rect.left += info.cxWindowBorders / 4;
-            rect.bottom -= info.cyWindowBorders / 4;
-            rect.right -= info.cxWindowBorders / 4;
-        }
-        else if (info.dwStyle & WS_OVERLAPPEDWINDOW) {
-            rect.left += info.cxWindowBorders;
-            rect.bottom -= info.cyWindowBorders;
-            rect.right -= info.cxWindowBorders;
-        }
-        iRect = rect;
-        bRet = TRUE;
     }
 
     if( !bRet ){

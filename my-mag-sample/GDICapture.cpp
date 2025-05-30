@@ -17,6 +17,9 @@ bool GDICapture::startCaptureWindow(HWND hWnd)
 {
     bool bRet = false;
 
+    _hwnd = { hWnd };
+    _hmonitor = { nullptr };
+
     _previousHwnd = GetForegroundWindow();
     SetForegroundWindow(hWnd);
     BringWindowToTop(hWnd);
@@ -42,6 +45,9 @@ bool GDICapture::startCaptureWindow(HWND hWnd)
 bool GDICapture::startCaptureScreen(HMONITOR hMonitor)
 {
     bool bRet = false;
+
+    _hwnd = { nullptr };
+    _hmonitor = { hMonitor };
 
     MONITORINFOEX mInfo ;
     ZeroMemory(&mInfo, sizeof(MONITORINFOEX));
@@ -118,7 +124,7 @@ bool GDICapture::onCaptured(void *srcdata, BITMAPINFOHEADER &header)
             std::vector<DesktopRect> maskRects;
             for (auto &h : _coverdWindows) {
                 CRect rect;
-                CapUtility::GetWindowRect(h, rect);
+                CapUtility::GetWindowRectAccuracy(h, rect);
                 CRect iRect;
                 RECT sRect = { _lastRect.left(), _lastRect.top(), _lastRect.right(), _lastRect.bottom() };
                 if (IntersectRect(&iRect, &rect, &sRect)) {
@@ -149,12 +155,23 @@ bool GDICapture::onCaptured(void *srcdata, BITMAPINFOHEADER &header)
     return bRet;
 }
 
-bool GDICapture::captureImage(const DesktopRect &rect)
+bool GDICapture::captureImage(const DesktopRect &reqRect)
 {
     bool bRet = false;
     BITMAPINFOHEADER &bmiHeader = bmi.bmiHeader;
 
-    if (!_lastRect.equals(rect)) {
+    DesktopRect rect{};
+
+    if (_hwnd) {
+        RECT r;
+        CapUtility::GetWindowRectAccuracy(_hwnd, r);
+        rect = DesktopRect::MakeRECT(r);
+    }
+    else {
+        rect = reqRect;
+    }
+
+    if (!(_lastRect == rect)) {
         int nBitPerPixel = GetDeviceCaps(_monitorDC, BITSPIXEL);
 
         memset(&bmi, 0, sizeof(bmi));
@@ -169,9 +186,8 @@ bool GDICapture::captureImage(const DesktopRect &rect)
         if (_hDibBitmap == NULL) {
             return (FALSE);
         }
+        _lastRect = rect;
     }
-    _lastRect = rect;
-
 
     HBITMAP hOldBitmap = HBITMAP(::SelectObject(_compatibleDC, _hDibBitmap));
 

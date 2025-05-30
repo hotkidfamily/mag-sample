@@ -46,7 +46,7 @@ DisplaySetting enumDisplaySettingByMonitor(HMONITOR hMonitor);
 bool getMaxResolutionInSystem(int32_t *cx, int32_t *cy);
 LRESULT GetPrimeryWindowsRect(RECT &rect);
 
-BOOL GetWindowRect(HWND hWnd, RECT &rect);
+BOOL GetWindowRectAccuracy(HWND hWnd, RECT &rect);
 
 int CaptureAnImage(HWND hWnd, std::wstring &path);
 };

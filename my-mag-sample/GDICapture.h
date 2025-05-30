@@ -22,6 +22,9 @@ class GDICapture : public CCapture {
     bool onCaptured(void *srcdata, BITMAPINFOHEADER& srcheader);
 
   private:
+    HWND _hwnd{ nullptr };
+    HMONITOR _hmonitor{ nullptr };
+
     HDC _monitorDC = nullptr;
     HDC _compatibleDC = nullptr;
     HBITMAP _hDibBitmap = nullptr;
