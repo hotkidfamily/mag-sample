@@ -70,10 +70,10 @@ bool GDICapture::stop()
     bool bRet = false;
 
     if (_compatibleDC)
-        ReleaseDC(NULL, _compatibleDC);
+        ::DeleteDC(_compatibleDC);
 
     if (_monitorDC)
-        ReleaseDC(NULL, _monitorDC);
+        ::DeleteDC(_monitorDC);
 
     if (_hDibBitmap)
         ::DeleteObject(_hDibBitmap);
@@ -125,6 +125,17 @@ bool GDICapture::onCaptured(void *srcdata, BITMAPINFOHEADER &header)
             for (auto &h : _coverdWindows) {
                 CRect rect;
                 CapUtility::GetWindowRectAccuracy(h, rect);
+
+                auto IsWindowExcludeFromCapture = [=](HWND h) -> bool {
+                    DWORD affinity = 0;
+                    auto ret = GetWindowDisplayAffinity(h, &affinity);
+                    return (ret == TRUE) && (affinity == WDA_EXCLUDEFROMCAPTURE);
+                };
+
+                if (IsWindowExcludeFromCapture(h)) {
+                    continue;
+                }
+
                 CRect iRect;
                 RECT sRect = { _lastRect.left(), _lastRect.top(), _lastRect.right(), _lastRect.bottom() };
                 if (IntersectRect(&iRect, &rect, &sRect)) {
