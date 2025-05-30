@@ -220,12 +220,7 @@ HRESULT d3d11render::display(const VideoFrame &frame)
     HRESULT hRet = S_OK;
 
     auto fmtType = frame.type();
-    auto width = frame.width();
-    auto height = frame.height();
-
-    CRect wndRect;
-    GetWindowRect(_hwnd, &wndRect);
-    CSize frameSize(width, height);
+    CSize frameSize(frame.width(), frame.height());
 
     auto curNono = std::chrono::high_resolution_clock::now();
 
@@ -257,13 +252,35 @@ HRESULT d3d11render::display(const VideoFrame &frame)
             return hr;
 
         _hwndSz = _hwndSettingSz;
+    }
 
+    {
+        float vp_width = 0;
+        float vp_height = 0;
+        float vp_top = 0;
+        float vp_left = 0;
+
+        float frameRatio = frameSize.cx *1.0f / frameSize.cy;
+        float wndRatio = _hwndSz.cx * 1.0f / _hwndSz.cy;
+
+        if (wndRatio > frameRatio) {
+            vp_width = _hwndSz.cy * frameRatio;
+            vp_height = _hwndSz.cy;
+            vp_left = (_hwndSz.cx - vp_width) / 2;
+            vp_top = 0;
+        }
+        else {
+            vp_width = _hwndSz.cx;
+            vp_height = _hwndSz.cx / frameRatio;
+            vp_left = 0;
+            vp_top = (_hwndSz.cy - vp_height) / 2;
+        }
         D3D11_VIEWPORT vp;
         ZeroMemory(&vp, sizeof(D3D11_VIEWPORT));
-        vp.Height = (FLOAT)_hwndSz.cy;
-        vp.Width = (FLOAT)_hwndSz.cx;
-        vp.TopLeftX = 0;
-        vp.TopLeftY = 0;
+        vp.Height = vp_height;
+        vp.Width = vp_width;
+        vp.TopLeftX = vp_left;
+        vp.TopLeftY = vp_top;
         _ctx->RSSetViewports(1, &vp);
     }
 
