@@ -5,8 +5,6 @@
 #include <array>
 #include <vector>
 
-static decltype(::DwmGetWindowAttribute) *_fnDwmGetWindowAttribute = nullptr;
-
 struct Window
 {
 public:
@@ -89,13 +87,13 @@ inline bool IsNoActivateWindow(HWND hwnd)
 
 inline bool IsWindowCloaked(Window wnd)
 {
-    bool ret = FALSE;
+    // not support if <= win7
+    bool ret = false;
 
     DWORD cloaked = FALSE;
-    if (_fnDwmGetWindowAttribute) {
-        HRESULT hrTemp = _fnDwmGetWindowAttribute(wnd.Hwnd(), DWMWA_CLOAKED, &cloaked, sizeof(cloaked));
-        ret = SUCCEEDED(hrTemp) && cloaked;
-    }
+    HRESULT hrTemp = DwmGetWindowAttribute(wnd.Hwnd(), DWMWA_CLOAKED, &cloaked, sizeof(cloaked));
+
+    ret = SUCCEEDED(hrTemp) && cloaked;
 
     return ret;
 }
@@ -178,20 +176,8 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 const std::vector<Window> EnumerateWindows()
 {
     std::vector<Window> windows;
-    HMODULE hmodule = nullptr;
-
-    if (!_fnDwmGetWindowAttribute) {
-        hmodule = LoadLibraryW(L"Dwmapi.dll");
-        if (hmodule) {
-            _fnDwmGetWindowAttribute = reinterpret_cast<decltype(_fnDwmGetWindowAttribute)>(
-                GetProcAddress(hmodule, "DwmGetWindowAttribute"));
-        }
-    }
 
     EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&windows));
-
-    if (hmodule)
-        FreeLibrary(hmodule);
 
     return windows;
 }
