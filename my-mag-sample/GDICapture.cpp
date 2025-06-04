@@ -169,7 +169,7 @@ bool GDICapture::onCaptured(void *srcdata, BITMAPINFOHEADER &header)
 bool GDICapture::captureImage(const DesktopRect &reqRect)
 {
     bool bRet = false;
-    BITMAPINFOHEADER &bmiHeader = bmi.bmiHeader;
+    BITMAPINFOHEADER &bmh = bmi.bmiHeader;
 
     DesktopRect rect{};
 
@@ -186,12 +186,12 @@ bool GDICapture::captureImage(const DesktopRect &reqRect)
         int nBitPerPixel = GetDeviceCaps(_monitorDC, BITSPIXEL);
 
         memset(&bmi, 0, sizeof(bmi));
-        bmiHeader.biSize = sizeof(bmiHeader);
-        bmiHeader.biWidth = rect.width();
-        bmiHeader.biHeight = -rect.height();
-        bmiHeader.biPlanes = 1;
-        bmiHeader.biBitCount = USHORT(nBitPerPixel);
-        bmiHeader.biCompression = BI_RGB;
+        bmh.biSize = sizeof(bmh);
+        bmh.biWidth = rect.width();
+        bmh.biHeight = -rect.height();
+        bmh.biPlanes = 1;
+        bmh.biBitCount = USHORT(nBitPerPixel);
+        bmh.biCompression = BI_RGB;
 
         _hDibBitmap = ::CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, &_hdstPtr, NULL, 0);
         if (_hDibBitmap == NULL) {
@@ -216,7 +216,7 @@ bool GDICapture::captureImage(const DesktopRect &reqRect)
 
     _hDibBitmap = HBITMAP(::SelectObject(_compatibleDC, hOldBitmap));
 
-    onCaptured(_hdstPtr, bmiHeader);
+    onCaptured(_hdstPtr, bmh);
 
 
     return bRet;

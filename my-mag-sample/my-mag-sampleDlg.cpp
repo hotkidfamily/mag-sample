@@ -458,7 +458,7 @@ void CmymagsampleDlg::OnBnClickedBtnScreencap()
     cpt.rect = DesktopRect::MakeRECT(settings.rect());
 
     cpt.winID = 0;
-    if (Platform::IsWin10_1903OrGreater() && idx<2) {
+    if (Platform::IsWin10_1903OrGreater() && idx < 2) {
         cpt.host = std::make_unique<WGCCapture>();
     }
     else if (Platform::IsWindows8OrGreater() && idx < 5) {

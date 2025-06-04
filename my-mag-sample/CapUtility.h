@@ -47,7 +47,5 @@ bool getMaxResolutionInSystem(int32_t *cx, int32_t *cy);
 LRESULT GetPrimeryWindowsRect(RECT &rect);
 
 BOOL GetWindowRectAccuracy(HWND hWnd, RECT &rect);
-
-int CaptureAnImage(HWND hWnd, std::wstring &path);
 };
     
