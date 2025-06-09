@@ -150,6 +150,7 @@
     <None Include="hlsl\psI420toRGBA.hlsl">
       <Filter>hlsl</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\my-mag-sample.ico">
