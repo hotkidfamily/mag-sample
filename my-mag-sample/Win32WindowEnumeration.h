@@ -7,30 +7,51 @@
 
 struct Window
 {
-public:
-    Window(nullptr_t) {}
-    Window(HWND hwnd, std::wstring const &title, std::wstring &className, bool transparent = false)
+  public:
+    Window(nullptr_t)
+    {
+    }
+    Window(HWND hwnd, std::wstring const &title, std::wstring &className, DWORD pid, bool transparent = false)
     {
         _hwnd = hwnd;
         _title = title;
         _className = className;
         _transparent = transparent;
+        _pid = pid;
     }
 
-    HWND Hwnd() const noexcept { return _hwnd; }
-    std::wstring Title() const noexcept { return _title; }
-    std::wstring ClassName() const noexcept { return _className; }
+    HWND Hwnd() const noexcept
+    {
+        return _hwnd;
+    }
+    std::wstring Title() const noexcept
+    {
+        return _title;
+    }
+    std::wstring ClassName() const noexcept
+    {
+        return _className;
+    }
+    auto Transparent() const noexcept
+    {
+        return _transparent;
+    }
+    DWORD PID() const noexcept
+    {
+        return _pid;
+    }
 
-private:
+  private:
     HWND _hwnd;
     std::wstring _title;
     std::wstring _className;
     bool _transparent;
+    DWORD _pid = -1;
 };
 
 inline std::wstring GetClassName(HWND hwnd)
 {
-	std::array<WCHAR, 1024> className;
+    std::array<WCHAR, 1024> className;
 
     ::GetClassName(hwnd, className.data(), (int)className.size());
 
@@ -40,7 +61,7 @@ inline std::wstring GetClassName(HWND hwnd)
 
 inline std::wstring GetWindowText(HWND hwnd)
 {
-	std::array<WCHAR, 1024> windowText;
+    std::array<WCHAR, 1024> windowText;
 
     ::GetWindowText(hwnd, windowText.data(), (int)windowText.size());
 
@@ -100,9 +121,9 @@ inline bool IsWindowCloaked(Window wnd)
 
 inline bool IsInvalidWindowSize(HWND hwnd)
 {
-    RECT rect;
+    CRect rect;
     GetWindowRect(hwnd, &rect);
-    return !!IsRectEmpty(&rect);
+    return !!IsRectEmpty(&rect) || (rect.Width() * rect.Height() < 256);
 }
 
 static bool IsWindowCapable(Window wnd)
@@ -136,7 +157,7 @@ static bool IsWindowCapable(Window wnd)
         return false;
     }
 
-    if (GetAncestor(hwnd, GA_ROOT) != hwnd){
+    if (GetAncestor(hwnd, GA_ROOT) != hwnd) {
         return false;
     }
 
@@ -148,9 +169,22 @@ static bool IsWindowCapable(Window wnd)
         return false;
     }
 
-    //if (IsToolWindow(hwnd)) {
-    //    return false;
-    //}
+    // if (IsToolWindow(hwnd)) {
+    //     return false;
+    // }
+
+    return true;
+}
+
+static bool IsInBlackList(Window &wnd)
+{
+    auto cn = wnd.ClassName();
+    if (cn.find(L"Huya") == std::wstring::npos) {
+        return false;
+    }
+    else if (cn.find(L"HwndWrapper[HuyaClient;;484d2019-0f6a-42b5-88d7-feb70478a643]") != std::wstring::npos) {
+        return false;
+    }
 
     return true;
 }
@@ -160,14 +194,19 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
     auto class_name = GetClassName(hwnd);
     auto title = GetWindowText(hwnd);
     auto transparent = IsTransparentWindow(hwnd);
-    auto window = Window(hwnd, title, class_name, transparent);
-    
-    if (!IsWindowCapable(window))
-    {
+    DWORD pid;
+    GetWindowThreadProcessId(hwnd, &pid);
+    auto window = Window(hwnd, title, class_name, pid, transparent);
+
+    if (!IsWindowCapable(window)) {
         return TRUE;
     }
 
-    std::vector<Window>& windows = *reinterpret_cast<std::vector<Window>*>(lParam);
+    if (IsInBlackList(window)) {
+        return TRUE;
+    }
+
+    std::vector<Window> &windows = *reinterpret_cast<std::vector<Window> *>(lParam);
     windows.push_back(window);
 
     return TRUE;
