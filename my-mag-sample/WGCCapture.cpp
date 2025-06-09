@@ -81,11 +81,11 @@ bool WGCCapture::_createSession()
         // "Windows.Foundation.UniversalApiContract", 19)) // 2104
         if (winrt::Windows::Foundation::Metadata::ApiInformation::IsPropertyPresent(
                 L"Windows.Graphics.Capture.GraphicsCaptureSession", L"IncludeSecondaryWindows")) {
-            //session.IncludeSecondaryWindows(true);
+            session.IncludeSecondaryWindows(true);
         }
         if (winrt::Windows::Foundation::Metadata::ApiInformation::IsPropertyPresent(
                 L"Windows.Graphics.Capture.GraphicsCaptureSession", L"MinUpdateInterval")) {
-            //session.MinUpdateInterval(std::chrono::milliseconds(30));
+            session.MinUpdateInterval(std::chrono::milliseconds(30));
         }
     }
         
