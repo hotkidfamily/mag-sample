@@ -23,6 +23,7 @@
 #include "GDICapture.h"
 #include "DXGICapture.h"
 #include "WGCCapture.h"
+#include "DWMCapture.h"
 
 #include "my-mag-sample.h"
 #include "my-mag-sampleDlg.h"
@@ -396,6 +397,9 @@ void CmymagsampleDlg::OnBnClickedBtnWndcap()
 
     if (Platform::IsWin10_1903OrGreater() && idx < 2) {
         cpt.host = std::make_unique<WGCCapture>();
+    }
+    else if (Platform::IsWindows8Point1OrGreater() && idx < 4) {
+        cpt.host = std::make_unique<DWMCapture>();
     }
     else if (Platform::IsWindowsVistaOrGreater() && idx < 8) {
         //_PreviousHwnd = ::GetForegroundWindow();

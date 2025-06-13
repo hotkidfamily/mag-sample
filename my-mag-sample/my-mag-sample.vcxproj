@@ -214,6 +214,7 @@
     <ClInclude Include="CPGPU.h" />
     <ClInclude Include="d3d11render.h" />
     <ClInclude Include="DesktopRect.h" />
+    <ClInclude Include="DWMCapture.h" />
     <ClInclude Include="DXGICapture.h" />
     <ClInclude Include="GDICapture.h" />
     <ClInclude Include="ImageUtils.h" />
@@ -235,6 +236,7 @@
     <ClCompile Include="CapUtility.cpp" />
     <ClCompile Include="CPGPU.cpp" />
     <ClCompile Include="d3d11render.cpp" />
+    <ClCompile Include="DWMCapture.cpp" />
     <ClCompile Include="DXGICapture.cpp" />
     <ClCompile Include="GDICapture.cpp" />
     <ClCompile Include="ImageUtils.cpp" />

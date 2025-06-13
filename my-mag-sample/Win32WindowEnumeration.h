@@ -202,9 +202,9 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
         return TRUE;
     }
 
-    if (IsInBlackList(window)) {
-        return TRUE;
-    }
+    //if (IsInBlackList(window)) {
+    //    return TRUE;
+    //}
 
     std::vector<Window> &windows = *reinterpret_cast<std::vector<Window> *>(lParam);
     windows.push_back(window);
