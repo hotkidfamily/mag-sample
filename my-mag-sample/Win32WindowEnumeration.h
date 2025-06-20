@@ -108,7 +108,6 @@ inline bool IsNoActivateWindow(HWND hwnd)
 
 inline bool IsWindowCloaked(Window wnd)
 {
-    // not support if <= win7
     bool ret = false;
 
     DWORD cloaked = FALSE;
@@ -123,13 +122,16 @@ inline bool IsInvalidWindowSize(HWND hwnd)
 {
     CRect rect;
     GetWindowRect(hwnd, &rect);
-    return !!IsRectEmpty(&rect) || (rect.Width() * rect.Height() < 256);
+    return !!IsRectEmpty(&rect);
 }
 
 static bool IsWindowCapable(Window wnd)
 {
     HWND hwnd = wnd.Hwnd();
-    if (hwnd == GetShellWindow()) {
+    HWND shell = GetShellWindow();
+    HWND desktop = GetDesktopWindow();
+
+    if (hwnd == shell) {
         return false;
     }
 
@@ -157,7 +159,24 @@ static bool IsWindowCapable(Window wnd)
         return false;
     }
 
+    if (GetWindowLong(hwnd, GWL_STYLE) & WS_CHILD) {
+        HWND hParent = GetParent(hwnd);
+        if (hParent != desktop) {
+            return false;
+        }
+    }
+    else {
+        HWND hOwner = GetWindow(hwnd, GW_OWNER);
+        if (hOwner != nullptr) {
+            return false;
+        }
+    }
+
     if (GetAncestor(hwnd, GA_ROOT) != hwnd) {
+        return false;
+    }
+
+    if (GetAncestor(hwnd, GA_ROOTOWNER) != hwnd) {
         return false;
     }
 
@@ -165,9 +184,9 @@ static bool IsWindowCapable(Window wnd)
         return false;
     }
 
-    if (IsWindowDisabled(hwnd)) {
-        return false;
-    }
+    //if (IsWindowDisabled(hwnd)) {
+    //    return false;
+    //}
 
     // if (IsToolWindow(hwnd)) {
     //     return false;
